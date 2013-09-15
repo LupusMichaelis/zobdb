@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <fcntl.h>
 #include <string.h>
+#include <errno.h>
 
 #include <sys/socket.h>
 #include <sys/un.h>
@@ -11,8 +12,13 @@
 
 char buffer[1024];
 
-#define CHECK(int_val)	if((int_val) < 0) { perror(*argv); return EXIT_FAILURE; }
-#define STEP(step)		fprintf(stderr, "%s\n", "" step);
+#define CHECK(int_val)\
+	if((int_val) < 0) {\
+		fprintf(stderr, "%s: %s %s[%d]", *argv, strerror(errno), __FILE__, __LINE__);\
+		return EXIT_FAILURE;\
+	}
+
+#define STEP(step)		fprintf(stderr, "%s:%d %s\n", __FILE__, __LINE__, "" step);
 
 #define SOCK_NAME "./con"
 
@@ -30,7 +36,7 @@ int main(int argc, char *argv[])
 	CHECK(connect(io, (struct sockaddr *) &addr, sizeof addr));
 	STEP("/Connect");
 
-	while(true)
+	do
 	{
 		int reading_count = read(STDIN_FILENO, &buffer, 1024);
 		CHECK(reading_count);
@@ -49,8 +55,7 @@ int main(int argc, char *argv[])
 			return EXIT_FAILURE;
 		}
 	}
+	while(true);
 
 	return EXIT_SUCCESS;
 }
-
-
