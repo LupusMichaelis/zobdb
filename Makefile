@@ -7,15 +7,20 @@ LDFLAGS= \
 		-g -ggdb
 
 SRCS= \
-	  dbd.c \
-	  db.c \
+	  src/server.c \
+	  src/client.c \
+	  src/app.c \
 
 
-OBJS=$(SRCS:.cpp=.o)
+OBJS=$(SRCS:.c=.o)
 
 TARGET=dbd db
+
+dbd: dbd.o $(OBJS)
+
+db: db.o $(OBJS)
 
 target: $(TARGET)
 
 clean:
-	-echo rm -rf $(OBJS) $(TARGET) $(TARGET:=.o)
+	-rm -rf $(OBJS) $(TARGET) $(TARGET:=.o)

@@ -10,52 +10,22 @@
 
 #include <stdbool.h>
 
-char buffer[1024];
-
-#define CHECK(int_val)\
-	if((int_val) < 0) {\
-		fprintf(stderr, "%s: %s %s[%d]", *argv, strerror(errno), __FILE__, __LINE__);\
-		return EXIT_FAILURE;\
-	}
-
-#define STEP(step)		fprintf(stderr, "%s:%d %s\n", __FILE__, __LINE__, "" step);
-
-#define SOCK_NAME "./con"
+#include "src/app.h"
+#include "src/client.h"
 
 int main(int argc, char *argv[])
 {
-	int io = socket(AF_UNIX, SOCK_STREAM, 0);
-	CHECK(io);
+	struct db_app * p_app;
+	db_app_new(&p_app);
+	db_app_init(p_app, argc, argv);
 
-	struct sockaddr_un addr;
-	memset(&addr, 0, sizeof addr);
-	addr.sun_family = AF_UNIX;
-	strcpy(addr.sun_path, SOCK_NAME);
+	struct db_client * p_db = NULL;
+	db_client_new(&p_db, p_app);
+	db_client_init(p_db);
 
-	STEP("Connect");
-	CHECK(connect(io, (struct sockaddr *) &addr, sizeof addr));
-	STEP("/Connect");
-
-	do
-	{
-		int reading_count = read(STDIN_FILENO, &buffer, 1024);
-		CHECK(reading_count);
-		
-		if(0 == reading_count)
-			break;
-
-		STEP("Write");
-		int writting_count = write(io, &buffer, reading_count);
-		STEP("/Write");
-		CHECK(writting_count);
-
-		if(reading_count != writting_count)
-		{
-			fprintf(stderr, "%d of %d bytes written\n", writting_count, reading_count);
-			return EXIT_FAILURE;
-		}
-	}
-	while(true);
+	db_client_connect(p_db, SOCK_NAME);
+	db_client_send(p_db, STDIN_FILENO);
 
 	return EXIT_SUCCESS;
 }
+
