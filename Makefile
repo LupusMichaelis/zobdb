@@ -16,11 +16,11 @@ OBJS=$(SRCS:.c=.o)
 
 TARGET=dbd db
 
+all: $(TARGET)
+
 dbd: dbd.o $(OBJS)
 
 db: db.o $(OBJS)
-
-target: $(TARGET)
 
 clean:
 	-rm -rf $(OBJS) $(TARGET) $(TARGET:=.o)
