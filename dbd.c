@@ -21,6 +21,7 @@ int main(int argc, char *argv[])
 	{
 		db_server_accept_begin(p_db);
 		db_server_read(p_db);
+		db_server_answer(p_db, "Ok");
 		db_server_accept_end(p_db);
 	}
 	while(true);

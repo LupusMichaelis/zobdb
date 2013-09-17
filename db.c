@@ -24,7 +24,9 @@ int main(int argc, char *argv[])
 	db_client_init(p_db);
 
 	db_client_connect(p_db, SOCK_NAME);
-	db_client_send(p_db, STDIN_FILENO);
+	db_client_send(p_db, fileno(stdin));
+
+	db_client_recv(p_db);
 
 	return EXIT_SUCCESS;
 }

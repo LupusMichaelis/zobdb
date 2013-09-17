@@ -20,7 +20,7 @@ struct db_server
 	char buffer[DB_BUFFER_SIZE];
 
 	int socket_fd;
-	int io_fd;
+	int session_fd;
 	int store_fd;
 
 	struct sockaddr_un self_addr;
@@ -42,7 +42,7 @@ void db_server_new(struct db_server ** pp_db, struct db_app * p_app)
 void db_server_init(struct db_server * p_db)
 {
 	p_db->remote_addr_size = sizeof p_db->remote_addr;
-	p_db->io_fd = -1;
+	p_db->session_fd = -1;
 
 	memset(&p_db->self_addr, 0, sizeof p_db->self_addr);
 	p_db->self_addr.sun_family = AF_UNIX;
@@ -52,7 +52,6 @@ void db_server_open_store(struct db_server * p_db, const char * filename)
 {
 	p_db->store_fd = open("./datas", 0600 | O_APPEND | O_WRONLY);
 	CHECK(p_db->p_app, p_db->store_fd);
-
 }
 
 void db_server_listen(struct db_server * p_db, const char * socket_path)
@@ -66,33 +65,45 @@ void db_server_listen(struct db_server * p_db, const char * socket_path)
 				, (struct sockaddr *) &p_db->self_addr
 				, sizeof p_db->self_addr));
 
-	CHECK(p_db->p_app, listen(p_db->socket_fd, 10));
+	CHECK(p_db->p_app, listen(p_db->socket_fd, 0));
 }
 
 void db_server_accept_begin(struct db_server * p_db)
 {
-	CHECK(p_db->p_app, p_db->io_fd = accept(p_db->socket_fd
+	CHECK(p_db->p_app, p_db->session_fd = accept(p_db->socket_fd
 				, (struct sockaddr *) &p_db->remote_addr
 				, &p_db->remote_addr_size));
 }
 
 void db_server_accept_end(struct db_server * p_db)
 {
-	close(p_db->io_fd);
+	close(p_db->session_fd);
 }
+
+static char buffer[4096];
 
 void db_server_read(struct db_server * p_db)
 {
-	int reading_count = recv(p_db->io_fd, &p_db->buffer, DB_BUFFER_SIZE, 0);
+	int reading_count = read(p_db->session_fd, &p_db->buffer, DB_BUFFER_SIZE);
 	CHECK(p_db->p_app, reading_count);
+	p_db->buffer[reading_count] = '\0';
 
 	if(0 == reading_count)
 		return;
 
-	int writting_count = write(p_db->store_fd, &p_db->buffer, reading_count);
+	int string_size = snprintf(buffer, 4096, "% -5d:%s\n", getpid(), p_db->buffer);
+	if(string_size >= 4096)
+		db_app_error(p_db->p_app, "Data truncated", __FILE__, __LINE__);
+
+	int writting_count = write(p_db->store_fd, &buffer, string_size);
 	CHECK(p_db->p_app, writting_count);
 
-	if(reading_count != writting_count)
+	if(string_size != writting_count)
 		db_app_error(p_db->p_app, "IO mismatch", __FILE__, __LINE__);
-		//fprintf(stderr, "%d of %d bytes written\n", writting_count, reading_count);
+}
+
+void db_server_answer(struct db_server * p_db, const char * message)
+{
+	int writting_count = write(p_db->session_fd, message, strlen(message));
+	CHECK(p_db->p_app, writting_count);
 }

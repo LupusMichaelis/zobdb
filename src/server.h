@@ -11,5 +11,6 @@ void db_server_listen(struct db_server * p_db, const char * socket_path);
 void db_server_accept_begin(struct db_server * p_db);
 void db_server_accept_end(struct db_server * p_db);
 void db_server_read(struct db_server * p_db);
+void db_server_answer(struct db_server * p_db, const char * message);
 
 #endif //H_DB_SERVER
