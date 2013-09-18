@@ -35,6 +35,24 @@ void db_client_init(struct db_client * p_db)
 	p_db->remote_addr.sun_family = AF_UNIX;
 }
 
+void db_client_create(struct db_client ** pp_client, struct db_app * p_app)
+{
+	struct db_client * p_client = NULL;
+	db_client_new(&p_client, p_app);
+	db_client_init(p_client);
+
+	*pp_client = p_client;
+}
+
+int db_client_run(struct db_client * p_client)
+{
+	db_client_connect(p_client, SOCK_NAME);
+	db_client_send(p_client, fileno(stdin));
+	db_client_recv(p_client);
+
+	return EXIT_SUCCESS;
+}
+
 void db_client_connect(struct db_client * p_db, char const * sockname)
 {
 	strcpy(p_db->remote_addr.sun_path, sockname);
@@ -63,7 +81,6 @@ void db_client_send(struct db_client * p_db, int in_fd)
 
 void db_client_recv(struct db_client * p_db)
 {
-
 	int reading_count = read(p_db->socket_fd, &p_db->buffer, DB_BUFFER_SIZE);
 	CHECK_INT(p_db->p_app, reading_count);
 	p_db->buffer[reading_count] = '\0';

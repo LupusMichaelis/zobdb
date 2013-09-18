@@ -48,6 +48,38 @@ void db_server_init(struct db_server * p_db)
 	p_db->self_addr.sun_family = AF_UNIX;
 }
 
+void db_server_create(struct db_server ** pp_server, struct db_app * p_app)
+{
+	struct db_server * p_server = NULL;
+	db_server_new(&p_server, p_app);
+	db_server_init(p_server);
+
+	*pp_server = p_server;
+}
+
+int db_server_run(struct db_server * p_server)
+{
+	daemon(1, 0);
+
+	db_app_open_log(p_server->p_app, LOG_NAME);
+	db_server_store_open(p_server, STORE_NAME);
+
+	db_server_listen(p_server, SOCK_NAME);
+	do
+	{
+		db_server_session_begin(p_server);
+
+		char * p_buffer = NULL;
+		db_server_read(p_server, &p_buffer);
+		db_server_store_write(p_server, p_buffer);
+		free(p_buffer);
+
+		db_server_answer(p_server, "Ok");
+		db_server_session_end(p_server);
+	}
+	while(true);
+}
+
 void db_server_store_open(struct db_server * p_db, const char * filename)
 {
 	p_db->store_fd = open(filename, 0600 | O_APPEND | O_WRONLY);
@@ -108,18 +140,15 @@ void db_server_read(struct db_server * p_db, char **pp_payload)
 		if(0 == reading_count)
 			break;
 
-		payload_size += reading_count;
+		payload_size += min(DB_BUFFER_SIZE, reading_count);
 		p_payload = realloc(p_payload, (payload_size + 1) * sizeof *p_payload);
 		CHECK_NULL(p_db->p_app, p_payload);
-		strncpy(p_payload + payload_size - reading_count, p_db->buffer, min(DB_BUFFER_SIZE, reading_count));
-		*(p_payload + payload_size) = '\0';
-
+		strncat(p_payload, p_db->buffer, min(DB_BUFFER_SIZE, reading_count));
 
 	} while(reading_count > DB_BUFFER_SIZE);
 
 	*pp_payload = p_payload;
 }
-
 
 void db_server_answer(struct db_server * p_db, const char * message)
 {

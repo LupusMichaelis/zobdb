@@ -22,6 +22,7 @@ struct db_app;
 
 void db_app_new(struct db_app ** pp_app);
 void db_app_init(struct db_app * p_app, int argc, char ** argv);
+int db_app_run(struct db_app * p_app);
 void db_app_error(struct db_app * p_app, const char * p_error, const char * filename, int filenumber);
 void db_app_open_log(struct db_app * p_app, const char * filename);
 void db_app_log(struct db_app * p_app, char const * text, const char * filename, int filenumber);

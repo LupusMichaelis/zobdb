@@ -7,9 +7,10 @@ LDFLAGS= \
 		-g -ggdb
 
 SRCS= \
+	  src/module.c \
+	  src/app.c \
 	  src/server.c \
 	  src/client.c \
-	  src/app.c \
 
 
 OBJS=$(SRCS:.c=.o)
@@ -18,9 +19,10 @@ TARGET=dbd db
 
 all: $(TARGET)
 
-dbd: dbd.o $(OBJS)
+app: app.o $(OBJS)
 
-db: db.o $(OBJS)
+$(TARGET): app
+	-ln -s ./app $@
 
 clean:
-	-rm -rf $(OBJS) $(TARGET) $(TARGET:=.o)
+	-rm -rf $(OBJS) app $(TARGET) $(TARGET:=.o)
