@@ -21,8 +21,11 @@ struct db_app
 {
 	char * name;
 
-	char *		p_error;
-	void *		p_con;
+	char * p_error;
+	void * p_con;
+
+
+	int log_fd;
 };
 
 void db_app_new(struct db_app ** pp_app)
@@ -45,8 +48,28 @@ void db_app_init(struct db_app * p_app, int argc, char ** argv)
 
 void db_app_error(struct db_app * p_app, const char * p_error, const char * filename, int filenumber)
 {
-	fprintf(stderr, "%s: %s[%d] %s\n", p_app->name, filename, filenumber, p_error);
+	FILE * log = fdopen(p_app->log_fd, "a");
+	if(NULL == log)
+	{
+		log = stderr;
+		fprintf(log, "%s: %s[%d] %s\n", p_app->name, __FILE__, __LINE__, strerror(errno));
+	}
+
+	fprintf(log, "%s: %s[%d] %s\n", p_app->name, filename, filenumber, p_error);
+
 	exit(EXIT_FAILURE);
+}
+
+void db_app_open_log(struct db_app * p_app, const char * filename)
+{
+	p_app->log_fd = open(filename, O_CREAT | O_APPEND | O_WRONLY, 0600);
+	CHECK_INT(p_app, p_app->log_fd);
+}
+
+void db_app_log(struct db_app * p_app, char const * text, const char * filename, int filenumber)
+{
+	FILE * log = fdopen(p_app->log_fd, "a");
+	fprintf(log, "%s: %s[%d] %s\n", p_app->name, filename, filenumber, text);
 }
 
 
