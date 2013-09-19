@@ -7,7 +7,8 @@ LDFLAGS= \
 		-g -ggdb
 
 SRCS= \
-	  src/module.c \
+	  src/log.c \
+	  src/store.c \
 	  src/app.c \
 	  src/server.c \
 	  src/client.c \

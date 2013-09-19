@@ -1,7 +1,4 @@
 
-#include "server.h"
-#include "app.h"
-
 #include <unistd.h>
 #include <stdlib.h>
 #include <signal.h>
@@ -13,7 +10,12 @@
 #include <errno.h>
 #include <stdbool.h>
 
+#include "server.h"
+#include "store.h"
+#include "app.h"
+
 struct db_app;
+struct db_store;
 
 struct db_server
 {
@@ -22,11 +24,12 @@ struct db_server
 
 	int socket_fd;
 	int session_fd;
-	int store_fd;
 
 	struct sockaddr_un self_addr;
 	struct sockaddr_un remote_addr;
 	socklen_t remote_addr_size;
+
+	struct db_store * p_store;
 };
 
 void db_server_new(struct db_server ** pp_db, struct db_app * p_app)
@@ -62,7 +65,7 @@ int db_server_run(struct db_server * p_server)
 	daemon(1, 0);
 
 	db_app_open_log(p_server->p_app, LOG_NAME);
-	db_server_store_open(p_server, STORE_NAME);
+	db_app_store_create(&p_server->p_store, p_server->p_app);
 
 	db_server_listen(p_server, SOCK_NAME);
 	do
@@ -71,28 +74,13 @@ int db_server_run(struct db_server * p_server)
 
 		char * p_buffer = NULL;
 		db_server_read(p_server, &p_buffer);
-		db_server_store_write(p_server, p_buffer);
+		db_app_store_write(p_server->p_store, p_buffer);
 		free(p_buffer);
 
 		db_server_answer(p_server, "Ok");
 		db_server_session_end(p_server);
 	}
 	while(true);
-}
-
-void db_server_store_open(struct db_server * p_db, const char * filename)
-{
-	p_db->store_fd = open(filename, 0600 | O_APPEND | O_WRONLY);
-	CHECK_INT(p_db->p_app, p_db->store_fd);
-}
-
-void db_server_store_write(struct db_server * p_db, const char * text)
-{
-	int writting_count = write(p_db->store_fd, text, strlen(text));
-	CHECK_INT(p_db->p_app, writting_count);
-
-	if(strlen(text) != writting_count)
-		db_app_error(p_db->p_app, "IO mismatch", __FILE__, __LINE__);
 }
 
 void db_server_listen(struct db_server * p_db, const char * socket_path)

@@ -27,6 +27,13 @@ static void db_app_on_exit()
 	//unlink(SOCK_NAME);
 }
 
+struct config
+{
+	char * p_name;
+	char * p_value;
+};
+
+
 struct db_app
 {
 	char * name;
@@ -40,6 +47,7 @@ struct db_app
 	int log_fd;
 
 	void * p_main_module;
+	struct config ** pp_config;
 };
 
 void db_app_new(struct db_app ** pp_app)
@@ -54,11 +62,14 @@ void db_app_new(struct db_app ** pp_app)
 
 #include <assert.h>
 
+static struct config tbl_config[] = { { "store", STORE_NAME, }, };
+
 void db_app_init(struct db_app * p_app, int argc, char ** argv)
 {
 	signal(SIGINT, db_app_signal);
 	atexit(db_app_on_exit);
 
+	// Determine app is server or client from name /////////////////////////
 	p_app->name = *argv;
 
 	char * slash = p_app->name + strlen(p_app->name);
@@ -76,6 +87,20 @@ void db_app_init(struct db_app * p_app, int argc, char ** argv)
 
 	assert((p_app->is_client && !p_app->is_server) || (!p_app->is_client && p_app->is_server));
 
+	// Configure app ///////////////////////////////////////////////////////
+	int element_count = sizeof tbl_config / sizeof *tbl_config;
+	struct config ** pp_config = calloc(1 + element_count, sizeof *pp_config);
+	struct config * p_config = calloc(element_count, sizeof **pp_config);
+
+	while(element_count--)
+	{
+		memcpy(p_config + element_count, &tbl_config[element_count], sizeof *p_config);
+		*(pp_config + element_count) = p_config + element_count;
+	}
+
+	p_app->pp_config = pp_config;
+
+	// Instantiate engine //////////////////////////////////////////////////
 	if(p_app->is_client)
 		db_client_create((struct db_client **)&p_app->p_main_module, p_app);
 	else if(p_app->is_server)
@@ -92,9 +117,20 @@ int db_app_run(struct db_app * p_app)
 		return db_server_run(p_app->p_main_module);
 
 	return EXIT_FAILURE;
-	//return db_module_run(p_app->p_main_module);
 }
 
+void db_app_config_get(struct db_app * p_app, const char * p_name, void ** pp_value)
+{
+	struct config ** pp_config = p_app->pp_config;
+
+	while(*pp_config)
+		if(0 == strcmp(p_name, (*pp_config)->p_name))
+			break;
+		else
+			++pp_config;
+
+	*pp_value = NULL == *pp_config ? NULL : (*pp_config)->p_value;
+}
 
 void db_app_error(struct db_app * p_app, const char * p_error, const char * filename, int filenumber)
 {

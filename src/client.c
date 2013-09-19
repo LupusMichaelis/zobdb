@@ -25,13 +25,13 @@ void db_client_new(struct db_client ** pp_db, struct db_app * p_app)
 	p_db = calloc(1, sizeof *p_db);
 	CHECK_NULL(p_app, p_db);
 
-	p_db->remote_addr_size = sizeof p_db->remote_addr;
 	p_db->p_app = p_app;
 	*pp_db = p_db;
 }
 
 void db_client_init(struct db_client * p_db)
 {
+	p_db->remote_addr_size = sizeof p_db->remote_addr;
 	p_db->remote_addr.sun_family = AF_UNIX;
 }
 
