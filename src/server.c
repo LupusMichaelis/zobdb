@@ -14,7 +14,7 @@
 #include "server.h"
 #include "store.h"
 #include "app.h"
-#include "request.h"
+#include "message.h"
 
 struct db_app;
 struct db_store;
@@ -95,26 +95,27 @@ int db_server_run(struct db_server * p_server)
 
 		} while(need_moar);
 
+		struct db_message * p_answer = NULL;
 		if(is_parse_error)
-			db_server_answer(p_server, "Ko");
+		{
+			db_server_answer(p_server, p_answer);
+		}
 		else
 		{
-			struct db_request * p_request = NULL;
+			struct db_message * p_request = NULL;
 			db_request_builder_get_request(p_rb, &p_request);
+
+			db_message_clone(p_request, &p_answer);
+
 
 			char * p_verb = NULL, * p_key = NULL;
-			db_request_get_verb(p_request, &p_verb);
-			db_request_get_key(p_request, &p_key);
+			db_message_get_verb(p_request, &p_verb);
+			db_message_get_key(p_request, &p_key);
+
 			fprintf(stderr, "Request '%s' key '%s'\n", p_verb, p_key);
 
-			db_server_answer(p_server, p_verb /* "Ok" */);
-
-			// Get parsed request for processing and answering
-			/*
-			struct db_request * p_request = NULL;
-			db_request_builder_get_request(p_rb, &p_request);
-			db_request_clone(p_request, &p_request);
-			*/
+			db_server_answer(p_server, p_answer);
+			db_message_dispose(&p_answer);
 		}
 
 		db_request_builder_dispose(p_rb);
@@ -178,8 +179,25 @@ void db_server_read(struct db_server * p_db, char **pp_payload)
 	*pp_payload = p_payload;
 }
 
-void db_server_answer(struct db_server * p_db, const char * message)
+void db_server_answer(struct db_server * p_db, struct db_message * p_answer)
 {
-	int writting_count = write(p_db->session_fd, message, strlen(message));
-	CHECK_INT(p_db->p_app, writting_count);
+	char * p_verb = NULL, * p_key = NULL, * p_payload = NULL;
+	db_message_get_verb(p_answer, &p_verb);
+	db_message_get_key(p_answer, &p_key);
+	db_message_get_payload(p_answer, &p_payload);
+
+	char buffer[1024];
+	memset(&buffer, 0, sizeof buffer);
+
+	int write_count = snprintf(buffer, 1024 - 1, "Request '%s' key '%s' value '%s'"
+			, p_verb
+			, p_key
+			, p_payload ? p_payload : "(null)"
+	);
+
+	int written = write(p_db->session_fd, buffer, min(write_count, 1024 - 1));
+	CHECK_INT(p_db->p_app, written);
+
+	free(p_key);
+	free(p_payload);
 }

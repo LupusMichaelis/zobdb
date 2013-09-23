@@ -1,7 +1,7 @@
 #ifndef H_DB_REQUEST_BUILDER
 #	define H_DB_REQUEST_BUILDER
 
-#	include "request.h"
+#	include "message.h"
 
 #	include <stdbool.h>
 
@@ -19,7 +19,7 @@ void db_request_builder_parse(
 		bool * need_moar
 		);
 
-void db_request_builder_get_request(struct db_request_builder * p_request, struct db_request ** pp_request);
+void db_request_builder_get_request(struct db_request_builder * p_request, struct db_message ** pp_message);
 
 void db_request_builder_is_bad_request(struct db_request_builder * p_rb, bool * is_bad_request);
 

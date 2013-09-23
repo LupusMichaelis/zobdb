@@ -1,4 +1,4 @@
-#include "request.h"
+#include "message.h"
 #include "request-builder.h"
 #include "buffer.h"
 #include "app.h"
@@ -8,7 +8,7 @@
 struct db_request_builder
 {
 	struct db_app * p_app;
-	struct db_request * p_request;
+	struct db_message * p_request;
 
 	int verb;
 	int options;
@@ -58,7 +58,7 @@ void db_request_builder_new(struct db_request_builder ** pp_rb, struct db_app * 
 void db_request_builder_init(struct db_request_builder * p_rb, struct db_app * p_app)
 {
 	p_rb->p_app = p_app;
-	db_request_create(&p_rb->p_request, p_app);
+	db_message_create(&p_rb->p_request, p_app);
 
 	db_buffer_create(&p_rb->p_buffer, p_app);
 
@@ -127,9 +127,9 @@ void db_request_builder_is_bad_request(struct db_request_builder * p_rb, bool * 
 	*is_bad_request = p_rb->is_bad_request;
 }
 
-void db_request_builder_get_request(struct db_request_builder * p_rb, struct db_request ** pp_request)
+void db_request_builder_get_request(struct db_request_builder * p_rb, struct db_message ** pp_request)
 {
-	db_request_clone(p_rb->p_request, pp_request);
+	db_message_clone(p_rb->p_request, pp_request);
 }
 
 void db_request_builder_find_verb(struct db_request_builder * p_rb)
@@ -198,8 +198,8 @@ void db_request_builder_parse_read(struct db_request_builder * p_rb)
 
 	db_buffer_get_string(p_rb->p_buffer, p_rb->first, has_found ? word_separator : line_feed, &p_key);
 
-	db_request_set_verb(p_rb->p_request, gpc_verbs[p_rb->verb]);
-	db_request_set_key(p_rb->p_request, p_key);
+	db_message_set_verb(p_rb->p_request, gpc_verbs[p_rb->verb]);
+	db_message_set_key(p_rb->p_request, p_key);
 	free(p_key);
 
 	/* TODO options!

@@ -13,7 +13,7 @@ SRCS= \
 	  src/app.c \
 	  src/server.c \
 	  src/client.c \
-	  src/request.c \
+	  src/message.c \
 	  src/request-builder.c \
 
 
