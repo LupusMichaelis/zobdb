@@ -1,6 +1,7 @@
 
 #include "buffer.h"
 #include "app.h"
+#include "object.h"
 
 #include <stdlib.h>
 #include <stdlib.h>
@@ -19,25 +20,33 @@ struct db_buffer
 	char * p_end;
 };
 
-void db_buffer_create(struct db_buffer ** pp_buffer, struct db_app * p_app)
+APP_ALLOC(buffer)
+APP_CREATE(buffer)
+APP_CLONE(buffer)
+APP_DISPOSE(buffer)
+
+void db_buffer_init(struct db_buffer * p_buffer, struct db_app * p_app)
 {
-	struct db_buffer * p_b = NULL;
-	p_b = calloc(1, sizeof *p_b);
-	CHECK_NULL(p_app, p_b);
-
-	p_b->chunk_size = 1024;
-
-	p_b->p_app = p_app;
-	*pp_buffer = p_b;
+	p_buffer->chunk_size = 1024;
+	p_buffer->p_app = p_app;
 }
 
-void db_buffer_dispose(struct db_buffer ** pp_buffer)
+void db_buffer_clean(struct db_buffer * p_buffer)
 {
-	if(NULL != (*pp_buffer)->p_begin)
-		free((*pp_buffer)->p_begin);
+	if(NULL != p_buffer->p_begin)
+	{
+		free(p_buffer->p_begin);
+		p_buffer->p_begin = NULL;
+	}
+}
 
-	free(*pp_buffer);
-	*pp_buffer = NULL;
+void db_buffer_copy(struct db_buffer * p_from, struct db_buffer * p_to)
+{
+	p_to->p_app = p_from->p_app;
+	p_to->chunk_size = p_from->chunk_size;
+
+	p_to->p_begin = calloc(p_from->p_end - p_from->p_begin, sizeof *p_to->p_begin);
+	strncpy(p_to->p_begin, p_from->p_begin, p_from->p_end - p_from->p_begin);
 }
 
 void db_buffer_ensure(struct db_buffer * p_buffer, size_t from, size_t input_size)

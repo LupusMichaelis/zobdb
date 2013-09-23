@@ -1,5 +1,7 @@
 
 #include "app.h"
+#include "client.h"
+#include "server.h"
 
 #include <unistd.h>
 #include <stdlib.h>
@@ -7,15 +9,6 @@
 #include <fcntl.h>
 #include <string.h>
 #include <stdbool.h>
-
-// XXX Temporary forwarding declarations
-struct db_client;
-struct db_server;
-void db_client_create(struct db_client ** pp_client, struct db_app * p_app);
-void db_server_create(struct db_server ** pp_client, struct db_app * p_app);
-
-int db_client_run(struct db_client * p_client);
-int db_server_run(struct db_server * p_server);
 
 static void db_app_signal(int s)
 {
@@ -50,7 +43,8 @@ struct db_app
 	struct config ** pp_config;
 };
 
-void db_app_new(struct db_app ** pp_app)
+// Don't use the APP_ALLOC macro, we don't have an app for error handling!
+void db_app_alloc(struct db_app ** pp_app)
 {
 	struct db_app * p_app = NULL;
 	p_app = calloc(1, sizeof *p_app);

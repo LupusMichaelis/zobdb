@@ -2,6 +2,7 @@
 #include "request-builder.h"
 #include "buffer.h"
 #include "app.h"
+#include "object.h"
 
 #include <stdlib.h>
 
@@ -51,9 +52,10 @@ void db_request_builder_new(struct db_request_builder ** pp_rb, struct db_app * 
 	p_rb = calloc(1, sizeof *p_rb);
 	CHECK_NULL(p_app, p_rb);
 
-	p_rb->p_app = p_app;
-	*pp_rb = p_rb;
-}
+APP_ALLOC(request_builder)
+APP_CREATE(request_builder)
+APP_CLONE(request_builder)
+APP_DISPOSE(request_builder)
 
 void db_request_builder_init(struct db_request_builder * p_rb, struct db_app * p_app)
 {
@@ -71,9 +73,15 @@ void db_request_builder_init(struct db_request_builder * p_rb, struct db_app * p
 
 }
 
-void db_request_builder_dispose(struct db_request_builder * p_rb)
+void db_request_builder_clean(struct db_request_builder * p_rb)
 {
-	db_buffer_dispose(&p_rb->p_buffer);
+	if(p_rb->p_buffer)
+		db_buffer_dispose(&p_rb->p_buffer);
+
+	if(p_rb->p_buffer)
+		db_message_dispose(&p_rb->p_request);
+
+	memset(p_rb, 0, sizeof *p_rb);
 }
 
 void db_request_builder_parse(

@@ -15,6 +15,7 @@
 #include "store.h"
 #include "app.h"
 #include "message.h"
+#include "object.h"
 
 struct db_app;
 struct db_store;
@@ -34,18 +35,13 @@ struct db_server
 	struct db_store * p_store;
 };
 
-void db_server_new(struct db_server ** pp_db, struct db_app * p_app)
-{
-	struct db_server * p_db = NULL;
-	p_db = calloc(1, sizeof *p_db);
-	CHECK_NULL(p_app, p_db);
+APP_ALLOC(server)
+APP_CREATE(server)
 
+void db_server_init(struct db_server * p_db, struct db_app * p_app)
+{
 	p_db->p_app = p_app;
-	*pp_db = p_db;
-}
 
-void db_server_init(struct db_server * p_db)
-{
 	p_db->remote_addr_size = sizeof p_db->remote_addr;
 	p_db->session_fd = -1;
 
@@ -53,18 +49,9 @@ void db_server_init(struct db_server * p_db)
 	p_db->self_addr.sun_family = AF_UNIX;
 }
 
-void db_server_create(struct db_server ** pp_server, struct db_app * p_app)
-{
-	struct db_server * p_server = NULL;
-	db_server_new(&p_server, p_app);
-	db_server_init(p_server);
-
-	*pp_server = p_server;
-}
-
 int db_server_run(struct db_server * p_server)
 {
-	//daemon(1, 0);
+	daemon(1, 0);
 
 	db_app_open_log(p_server->p_app, LOG_NAME);
 	db_app_store_create(&p_server->p_store, p_server->p_app);
@@ -118,7 +105,7 @@ int db_server_run(struct db_server * p_server)
 			db_message_dispose(&p_answer);
 		}
 
-		db_request_builder_dispose(p_rb);
+		db_request_builder_dispose(&p_rb);
 		db_server_session_end(p_server);
 	}
 	while(true);

@@ -8,6 +8,10 @@ struct db_app;
 #	include <stdbool.h>
 
 void db_buffer_create(struct db_buffer ** pp_buffer, struct db_app * p_app);
+void db_buffer_init(struct db_buffer * p_buffer, struct db_app * p_app);
+void db_buffer_clone(struct db_buffer * p_buffer, struct db_buffer ** pp_buffer);
+void db_buffer_copy(struct db_buffer * p_from, struct db_buffer * p_to);
+void db_buffer_clean(struct db_buffer * p_buffer);
 void db_buffer_dispose(struct db_buffer ** pp_buffer);
 void db_buffer_ensure(struct db_buffer * p_buffer, size_t from, size_t input_size);
 void db_buffer_write(struct db_buffer * p_buffer, size_t * p_from, const char * p_text);

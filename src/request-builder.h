@@ -11,7 +11,9 @@ struct db_request_builder;
 void db_request_builder_new(struct db_request_builder ** pp_rb, struct db_app * p_app);
 void db_request_builder_create(struct db_request_builder ** pp_request_builder, struct db_app * p_app);
 void db_request_builder_init(struct db_request_builder * p_request_builder, struct db_app * p_app);
-void db_request_builder_dispose(struct db_request_builder * p_rb);
+void db_request_builder_dispose(struct db_request_builder ** pp_rb);
+void db_request_builder_clean(struct db_request_builder * p_rb);
+void db_request_builder_copy(struct db_request_builder * p_orig, struct db_request_builder * p_dest);
 
 void db_request_builder_parse(
 		struct db_request_builder * p_builder,

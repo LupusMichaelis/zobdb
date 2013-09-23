@@ -7,6 +7,7 @@
 
 #include "client.h"
 #include "app.h"
+#include "object.h"
 
 struct db_client
 {
@@ -19,29 +20,14 @@ struct db_client
 	socklen_t remote_addr_size;
 };
 
-void db_client_new(struct db_client ** pp_db, struct db_app * p_app)
-{
-	struct db_client * p_db = NULL;
-	p_db = calloc(1, sizeof *p_db);
-	CHECK_NULL(p_app, p_db);
+APP_ALLOC(client)
+APP_CREATE(client)
 
+void db_client_init(struct db_client * p_db, struct db_app * p_app)
+{
 	p_db->p_app = p_app;
-	*pp_db = p_db;
-}
-
-void db_client_init(struct db_client * p_db)
-{
 	p_db->remote_addr_size = sizeof p_db->remote_addr;
 	p_db->remote_addr.sun_family = AF_UNIX;
-}
-
-void db_client_create(struct db_client ** pp_client, struct db_app * p_app)
-{
-	struct db_client * p_client = NULL;
-	db_client_new(&p_client, p_app);
-	db_client_init(p_client);
-
-	*pp_client = p_client;
 }
 
 int db_client_run(struct db_client * p_client)

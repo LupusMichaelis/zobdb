@@ -21,8 +21,9 @@
 
 struct db_app;
 
-void db_app_new(struct db_app ** pp_app);
+void db_app_alloc(struct db_app ** pp_app);
 void db_app_init(struct db_app * p_app, int argc, char ** argv);
+
 int db_app_run(struct db_app * p_app);
 
 void db_app_config_get(struct db_app * p_app, const char * p_name, void ** pp_value);
