@@ -19,4 +19,3 @@ int main(int argc, char *argv[])
 	db_app_init(p_app, argc, argv);
 	return db_app_run(p_app);
 }
-

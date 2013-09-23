@@ -10,9 +10,11 @@
 #include <errno.h>
 #include <stdbool.h>
 
+#include "request-builder.h"
 #include "server.h"
 #include "store.h"
 #include "app.h"
+#include "request.h"
 
 struct db_app;
 struct db_store;
@@ -62,7 +64,7 @@ void db_server_create(struct db_server ** pp_server, struct db_app * p_app)
 
 int db_server_run(struct db_server * p_server)
 {
-	daemon(1, 0);
+	//daemon(1, 0);
 
 	db_app_open_log(p_server->p_app, LOG_NAME);
 	db_app_store_create(&p_server->p_store, p_server->p_app);
@@ -70,14 +72,52 @@ int db_server_run(struct db_server * p_server)
 	db_server_listen(p_server, SOCK_NAME);
 	do
 	{
+		struct db_request_builder * p_rb = NULL;
+		db_request_builder_create(&p_rb, p_server->p_app);
+
 		db_server_session_begin(p_server);
 
 		char * p_buffer = NULL;
-		db_server_read(p_server, &p_buffer);
-		db_app_store_write(p_server->p_store, p_buffer);
-		free(p_buffer);
 
-		db_server_answer(p_server, "Ok");
+		bool need_moar = true;
+		bool is_parse_error = false;
+		do
+		{
+			db_server_read(p_server, &p_buffer);
+			db_app_store_write(p_server->p_store, p_buffer);
+			db_request_builder_parse(p_rb, p_buffer, &need_moar);
+			free(p_buffer);
+
+
+			db_request_builder_is_bad_request(p_rb, &is_parse_error);
+			if(is_parse_error)
+				need_moar = false;
+
+		} while(need_moar);
+
+		if(is_parse_error)
+			db_server_answer(p_server, "Ko");
+		else
+		{
+			struct db_request * p_request = NULL;
+			db_request_builder_get_request(p_rb, &p_request);
+
+			char * p_verb = NULL, * p_key = NULL;
+			db_request_get_verb(p_request, &p_verb);
+			db_request_get_key(p_request, &p_key);
+			fprintf(stderr, "Request '%s' key '%s'\n", p_verb, p_key);
+
+			db_server_answer(p_server, p_verb /* "Ok" */);
+
+			// Get parsed request for processing and answering
+			/*
+			struct db_request * p_request = NULL;
+			db_request_builder_get_request(p_rb, &p_request);
+			db_request_clone(p_request, &p_request);
+			*/
+		}
+
+		db_request_builder_dispose(p_rb);
 		db_server_session_end(p_server);
 	}
 	while(true);

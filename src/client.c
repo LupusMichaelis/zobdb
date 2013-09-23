@@ -85,6 +85,6 @@ void db_client_recv(struct db_client * p_db)
 	CHECK_INT(p_db->p_app, reading_count);
 	p_db->buffer[reading_count] = '\0';
 
-	if(0 == strcmp("OK", p_db->buffer))
+	if(0 != strcmp("Ok", p_db->buffer))
 		db_app_error(p_db->p_app, "No ack", __FILE__, __LINE__);
 }

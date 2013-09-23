@@ -4,3 +4,6 @@ dbd
 .*.swp
 *.o
 .*
+app
+datas
+log

@@ -7,11 +7,14 @@ LDFLAGS= \
 		-g -ggdb
 
 SRCS= \
+	  src/buffer.c \
 	  src/log.c \
 	  src/store.c \
 	  src/app.c \
 	  src/server.c \
 	  src/client.c \
+	  src/request.c \
+	  src/request-builder.c \
 
 
 OBJS=$(SRCS:.c=.o)
