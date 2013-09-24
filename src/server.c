@@ -102,8 +102,10 @@ int db_server_run(struct db_server * p_server)
 			fprintf(stderr, "Request '%s' key '%s'\n", p_verb, p_key);
 
 			db_server_answer(p_server, p_answer);
-			db_message_dispose(&p_answer);
+			db_message_dispose(&p_request);
 		}
+
+		db_message_dispose(&p_answer);
 
 		db_request_builder_dispose(&p_rb);
 		db_server_session_end(p_server);

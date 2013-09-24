@@ -40,17 +40,12 @@ static char * gpc_verbs[] = {
 	(char *)NULL,
 };
 
-void db_request_builder_create(struct db_request_builder ** pp_rb, struct db_app * p_app)
-{
-	db_request_builder_new(pp_rb, p_app);
-	db_request_builder_init(*pp_rb, p_app);
-}
-
 void db_request_builder_new(struct db_request_builder ** pp_rb, struct db_app * p_app)
 {
 	struct db_request_builder * p_rb = NULL;
 	p_rb = calloc(1, sizeof *p_rb);
 	CHECK_NULL(p_app, p_rb);
+}
 
 APP_ALLOC(request_builder)
 APP_CREATE(request_builder)
@@ -82,6 +77,28 @@ void db_request_builder_clean(struct db_request_builder * p_rb)
 		db_message_dispose(&p_rb->p_request);
 
 	memset(p_rb, 0, sizeof *p_rb);
+}
+
+void db_request_builder_copy(struct db_request_builder * p_orig, struct db_request_builder * p_dest)
+{
+	p_dest->p_app = p_orig->p_app;
+	db_message_clone(p_orig->p_request, &p_dest->p_request);
+
+	p_dest->verb = p_orig->verb;
+	p_dest->options = p_orig->options;
+
+	p_dest->has_verb = p_orig->has_verb;
+	p_dest->is_bad_request = p_orig->is_bad_request;
+	p_dest->need_moar = p_orig->need_moar;
+
+	db_buffer_clone(p_orig->p_buffer, &p_dest->p_buffer);
+
+	// boundaries of the current sequence to analyse in buffer
+	p_dest->first = p_orig->first;
+	p_dest->last = p_orig->last;
+
+	// current position of the analyser in the buffer
+	p_dest->current = p_orig->current;
 }
 
 void db_request_builder_parse(
@@ -247,4 +264,3 @@ void db_request_builder_parse_update(struct db_request_builder * p_rb)
 	fprintf(stderr, "Parse update\n");
 	p_rb->is_bad_request = true;
 }
-
