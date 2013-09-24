@@ -75,7 +75,6 @@ int db_server_run(struct db_server * p_server)
 			db_request_builder_parse(p_rb, p_buffer, &need_moar);
 			free(p_buffer);
 
-
 			db_request_builder_is_bad_request(p_rb, &is_parse_error);
 			if(is_parse_error)
 				need_moar = false;
@@ -94,12 +93,11 @@ int db_server_run(struct db_server * p_server)
 
 			db_message_clone(p_request, &p_answer);
 
-
 			char * p_verb = NULL, * p_key = NULL;
 			db_message_get_verb(p_request, &p_verb);
 			db_message_get_key(p_request, &p_key);
-
 			fprintf(stderr, "Request '%s' key '%s'\n", p_verb, p_key);
+			free(p_key);
 
 			db_server_answer(p_server, p_answer);
 			db_message_dispose(&p_request);

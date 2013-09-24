@@ -56,7 +56,6 @@ void db_request_builder_init(struct db_request_builder * p_rb, struct db_app * p
 {
 	p_rb->p_app = p_app;
 	db_message_create(&p_rb->p_request, p_app);
-
 	db_buffer_create(&p_rb->p_buffer, p_app);
 
 	p_rb->is_bad_request = false;
@@ -73,7 +72,7 @@ void db_request_builder_clean(struct db_request_builder * p_rb)
 	if(p_rb->p_buffer)
 		db_buffer_dispose(&p_rb->p_buffer);
 
-	if(p_rb->p_buffer)
+	if(p_rb->p_request)
 		db_message_dispose(&p_rb->p_request);
 
 	memset(p_rb, 0, sizeof *p_rb);
@@ -221,9 +220,9 @@ void db_request_builder_parse_read(struct db_request_builder * p_rb)
 	char * p_key = NULL;
 	//char * p_option = NULL;
 
-	db_buffer_get_string(p_rb->p_buffer, p_rb->first, has_found ? word_separator : line_feed, &p_key);
-
 	db_message_set_verb(p_rb->p_request, gpc_verbs[p_rb->verb]);
+
+	db_buffer_get_string(p_rb->p_buffer, p_rb->first, has_found ? word_separator : line_feed, &p_key);
 	db_message_set_key(p_rb->p_request, p_key);
 	free(p_key);
 

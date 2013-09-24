@@ -34,10 +34,9 @@ void db_buffer_init(struct db_buffer * p_buffer, struct db_app * p_app)
 void db_buffer_clean(struct db_buffer * p_buffer)
 {
 	if(NULL != p_buffer->p_begin)
-	{
 		free(p_buffer->p_begin);
-		p_buffer->p_begin = NULL;
-	}
+
+	memset(p_buffer, 0, sizeof *p_buffer);
 }
 
 void db_buffer_copy(struct db_buffer * p_from, struct db_buffer * p_to)
@@ -76,10 +75,8 @@ void db_buffer_ensure(struct db_buffer * p_buffer, size_t from, size_t input_siz
 void db_buffer_write(struct db_buffer * p_buffer, size_t * p_from, const char * p_text)
 {
 	db_buffer_ensure(p_buffer, *p_from, strlen(p_text));
-
-	do
-		*(p_buffer->p_begin + (*p_from)++) = *p_text;
-	while(*++p_text);
+	strcpy(p_buffer->p_begin + *p_from, p_text);
+	*p_from += strlen(p_text);
 }
 
 void db_buffer_get(struct db_buffer * p_buffer, char ** pp_text)
