@@ -54,7 +54,7 @@ int db_server_run(struct db_server * p_server)
 	daemon(1, 0);
 
 	db_app_open_log(p_server->p_app, LOG_NAME);
-	db_app_store_create(&p_server->p_store, p_server->p_app);
+	db_store_create(&p_server->p_store, p_server->p_app);
 
 	db_server_listen(p_server, SOCK_NAME);
 	do
@@ -71,7 +71,6 @@ int db_server_run(struct db_server * p_server)
 		do
 		{
 			db_server_read(p_server, &p_buffer);
-			db_app_store_write(p_server->p_store, p_buffer);
 			db_request_builder_parse(p_rb, p_buffer, &need_moar);
 			free(p_buffer);
 
@@ -93,22 +92,66 @@ int db_server_run(struct db_server * p_server)
 
 			db_message_clone(p_request, &p_answer);
 
-			char * p_verb = NULL, * p_key = NULL;
-			db_message_get_verb(p_request, &p_verb);
-			db_message_get_key(p_request, &p_key);
-			fprintf(stderr, "Request '%s' key '%s'\n", p_verb, p_key);
-			free(p_key);
-
+			db_server_process(p_server, p_request, p_answer);
 			db_server_answer(p_server, p_answer);
 			db_message_dispose(&p_request);
 		}
 
 		db_message_dispose(&p_answer);
-
 		db_request_builder_dispose(&p_rb);
 		db_server_session_end(p_server);
 	}
 	while(true);
+
+	db_store_dispose(&p_server->p_store);
+}
+
+void db_server_process(struct db_server * p_db, struct db_message * p_request, struct db_message * p_answer)
+{
+	const char * p_verb = NULL;
+	char * p_key = NULL, * p_payload = NULL;
+	db_message_get_verb(p_request, (char **) &p_verb);
+	db_message_get_key(p_request, (char **) &p_key);
+
+	if(0 == strcmp("read", p_verb))
+	{
+		/*
+		bool has_found = false;
+		db_store_read(p_db->fd, p_key, &p_payload, &has_found);
+		if(!has_found)
+		{
+			goto end;
+		}
+
+		db_message_set_payload(p_answer, p_payload);
+		*/
+
+		// Trololol, I'm a read server!
+		db_message_set_payload(p_answer, "Ko Write only");
+	}
+	else if(0 == strcmp("new", p_verb))
+	{
+		char * p_ticket = NULL;
+		bool is_ok = false;
+
+		db_message_get_payload(p_request, &p_payload);
+		db_store_write(p_db->p_store, p_key, p_payload, &p_ticket, &is_ok);
+		free(p_payload);
+
+		if(is_ok)
+		{
+			char answer[100];
+			snprintf(answer, 99, "Ok %s", p_ticket);
+			db_message_set_payload(p_answer, answer);
+		}
+		else
+		{
+		}
+
+		//db_message_set_payload(p_answer, "Ko\nRead only");
+	}
+
+	free(p_key);
 }
 
 void db_server_listen(struct db_server * p_db, const char * socket_path)
@@ -145,7 +188,6 @@ void db_server_read(struct db_server * p_db, char **pp_payload)
 	int payload_size = 0;
 
 	p_payload = calloc(DB_BUFFER_SIZE + 1, sizeof *p_payload);
-	*p_payload = '\0';
 
 	int reading_count = 0;
 	do

@@ -15,5 +15,6 @@ void db_server_session_begin(struct db_server * p_db);
 void db_server_session_end(struct db_server * p_db);
 void db_server_read(struct db_server * p_db, char **pp_payload);
 void db_server_answer(struct db_server * p_db, struct db_message * p_answer);
+void db_server_process(struct db_server * p_db, struct db_message * p_request, struct db_message * p_answer);
 
 #endif //H_DB_SERVER

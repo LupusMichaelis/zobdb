@@ -1,5 +1,6 @@
 #include "store.h"
 #include "app.h"
+#include "object.h"
 
 #include <stdlib.h>
 #include <fcntl.h>
@@ -8,23 +9,19 @@
 struct db_store
 {
 	struct db_app * p_app;
-
 	int fd;
 };
 
 
-void db_app_store_new(struct db_store ** pp_store, struct db_app * p_app)
-{
-	struct db_store * p_store = NULL;
-	p_store = calloc(1, sizeof *p_store);
-	CHECK_NULL(p_app, p_store);
+APP_ALLOC(store)
+APP_CREATE(store)
+APP_DISPOSE(store)
+APP_CLONE(store)
 
+void db_store_init(struct db_store * p_store, struct db_app * p_app)
+{
 	p_store->p_app = p_app;
-	*pp_store = p_store;
-}
 
-void db_app_store_init(struct db_store * p_store)
-{
 	const char * filename = NULL;
 	db_app_config_get(p_store->p_app, "store", (void **)&filename);
 	p_store->fd = open(filename, 0600 | O_APPEND | O_WRONLY);
@@ -32,21 +29,50 @@ void db_app_store_init(struct db_store * p_store)
 	CHECK_INT(p_store->p_app, p_store->fd);
 }
 
-void db_app_store_create(struct db_store ** pp_store, struct db_app * p_app)
+void db_store_generate_ticket(struct db_store * p_store, char ** pp_ticket)
 {
-	struct db_store * p_store = NULL;
-	db_app_store_new(&p_store, p_app);
-	db_app_store_init(p_store);
-
-	*pp_store = p_store;
+	// TODO a unique id ::= pid | ' ' | sequence-number
+	(void) p_store;
+	*pp_ticket = "1234";
 }
 
-void db_app_store_write(struct db_store * p_store, const char * text)
+static void do_write(struct db_store * p_store, const char * p_text)
 {
-	int writting_count = write(p_store->fd, text, strlen(text));
+	int writting_count = write(p_store->fd, p_text, strlen(p_text));
 	CHECK_INT(p_store->p_app, writting_count);
-
-	if(strlen(text) != writting_count)
+	if(strlen(p_text) != writting_count)
 		db_app_error(p_store->p_app, "IO mismatch", __FILE__, __LINE__);
+
+}
+
+void db_store_write(
+		struct db_store * p_store,
+		const char * p_key,
+		const char * p_value,
+		char ** pp_ticket,
+		bool * is_ok)
+{
+	char * p_ticket = NULL;
+	db_store_generate_ticket(p_store, &p_ticket);
+
+	do_write(p_store, p_key);
+	do_write(p_store, " ");
+	do_write(p_store, p_ticket);
+	do_write(p_store, "\n");
+	do_write(p_store, p_value);
+	do_write(p_store, "\n\n");
+
+	*pp_ticket = p_ticket;
+	*is_ok = true;
+}
+
+void db_store_copy(struct db_store * p_from, struct db_store * p_to)
+{
+	db_app_error(p_from->p_app, "Not implemented", __FILE__, __LINE__);
+}
+
+void db_store_clean(struct db_store * p_store)
+{
+	db_app_error(p_store->p_app, "Not implemented", __FILE__, __LINE__);
 }
 

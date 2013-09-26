@@ -40,13 +40,6 @@ static char * gpc_verbs[] = {
 	(char *)NULL,
 };
 
-void db_request_builder_new(struct db_request_builder ** pp_rb, struct db_app * p_app)
-{
-	struct db_request_builder * p_rb = NULL;
-	p_rb = calloc(1, sizeof *p_rb);
-	CHECK_NULL(p_app, p_rb);
-}
-
 APP_ALLOC(request_builder)
 APP_CREATE(request_builder)
 APP_CLONE(request_builder)
@@ -106,7 +99,6 @@ void db_request_builder_parse(
 		bool * p_need_moar
 		)
 {
-	db_buffer_ensure(p_rb->p_buffer, p_rb->last, strlen(p_text));
 	db_buffer_write(p_rb->p_buffer, &p_rb->last, p_text);
 
 	do
@@ -195,8 +187,35 @@ void db_request_builder_find_verb(struct db_request_builder * p_rb)
 
 void db_request_builder_parse_new(struct db_request_builder * p_rb)
 {
-	fprintf(stderr, "Parse new\n");
-	p_rb->is_bad_request = true;
+	bool has_found = false;
+	size_t line_feed = 0;
+
+	db_buffer_find_char(p_rb->p_buffer, '\n', p_rb->first, p_rb->last, &line_feed, &has_found);
+	if(!has_found)
+		return; // We don't have enough data to take a decision
+
+	size_t word_separator = 0;
+	db_buffer_find_char(p_rb->p_buffer, ' ', p_rb->first, p_rb->last, &word_separator, &has_found);
+
+	if(!has_found)
+	{
+		p_rb->is_bad_request = true;
+		return;
+	}
+
+	db_message_set_verb(p_rb->p_request, gpc_verbs[p_rb->verb]);
+
+	char * p_word = NULL;
+
+	db_buffer_get_string(p_rb->p_buffer, p_rb->first, word_separator, &p_word);
+	db_message_set_key(p_rb->p_request, p_word);
+	free(p_word);
+
+	db_buffer_get_string(p_rb->p_buffer, word_separator + 1, line_feed, &p_word);
+	db_message_set_payload(p_rb->p_request, p_word);
+	free(p_word);
+
+	p_rb->need_moar = false;
 }
 
 void db_request_builder_parse_clone(struct db_request_builder * p_rb)
