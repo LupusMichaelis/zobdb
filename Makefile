@@ -21,7 +21,12 @@ SRCS= \
 
 OBJS=$(SRCS:.c=.o)
 
-TARGET=dbd db
+TARGET= \
+		client \
+		readd \
+		writed \
+		notifyd \
+		stored
 
 all: $(TARGET)
 

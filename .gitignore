@@ -1,9 +1,14 @@
-db
-dbd
 *.vim
 .*.swp
 *.o
 .*
+
 app
 datas
 log
+
+client
+readd
+writed
+notifyd
+stored

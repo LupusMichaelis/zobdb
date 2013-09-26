@@ -107,9 +107,13 @@ void db_buffer_ensure(struct db_buffer * p_buffer, size_t from, size_t input_siz
 
 void db_buffer_write(struct db_buffer * p_buffer, size_t * p_from, const char * p_text)
 {
-	db_buffer_ensure(p_buffer, *p_from, strlen(p_text));
+	int length = strlen(p_text);
+
+	if(!length) db_app_error(p_buffer->p_app, "Empty write", __FILE__, __LINE__);
+
+	db_buffer_ensure(p_buffer, *p_from, length);
 	strcpy(p_buffer->p_begin + *p_from, p_text);
-	*p_from += strlen(p_text);
+	*p_from += length;
 }
 
 void db_buffer_get(struct db_buffer * p_buffer, char ** pp_text)

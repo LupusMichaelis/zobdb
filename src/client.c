@@ -15,6 +15,7 @@ struct db_client
 	char buffer[DB_BUFFER_SIZE];
 
 	int socket_fd;
+	bool wait_moar;
 
 	struct sockaddr_un remote_addr;
 	socklen_t remote_addr_size;
@@ -43,7 +44,7 @@ int db_client_run(struct db_client * p_client)
 {
 	db_client_connect(p_client, SOCK_NAME);
 	db_client_send(p_client, fileno(stdin));
-	db_client_recv(p_client);
+	do db_client_recv(p_client); while(p_client->wait_moar);
 
 	return EXIT_SUCCESS;
 }
