@@ -30,9 +30,12 @@ void db_message_init(struct db_message * p_message, struct db_app * p_app)
 
 void db_message_copy(struct db_message * p_message_orig, struct db_message * p_message_dest)
 {
+	p_message_dest->p_app = p_message_orig->p_app;
 	p_message_dest->p_verb = p_message_orig->p_verb;
 	p_message_dest->p_key = calloc(1 + strlen(p_message_orig->p_key), sizeof *p_message_orig->p_key);
 	strcpy(p_message_dest->p_key, p_message_orig->p_key);
+	p_message_dest->p_payload = calloc(1 + strlen(p_message_orig->p_payload), sizeof *p_message_orig->p_payload);
+	strcpy(p_message_dest->p_payload, p_message_orig->p_payload);
 }
 
 void db_message_clean(struct db_message * p_message)
@@ -92,4 +95,27 @@ void db_message_get_payload(struct db_message * p_message, char ** pp_payload)
 
 	*pp_payload = p_payload;
 }
+
+void db_message_set_payload(struct db_message * p_message, char * p_payload)
+{
+	if(p_message->p_payload)
+	{
+		free(p_message->p_payload);
+		p_message->p_payload = NULL;
+	}
+
+	p_message->p_payload = calloc(1 + strlen(p_payload), sizeof *p_message->p_payload);
+	CHECK_NULL(p_message->p_app, p_message->p_payload);
+	strcpy(p_message->p_payload, p_payload);
+}
+
+/*
+void db_message_append_payload(struct db_message * p_message, char * p_payload)
+{
+	size_t new_size = (1 + strlen(p_message->p_payload) + strlen(p_payload)) * sizeof *p_payload;
+	p_message->p_payload = realloc(p_message->p_payload, new_size);
+	CHECK_NULL(p_message->p_app, p_message->p_payload);
+	strcat(p_message->p_payload, p_payload);
+}
+*/
 

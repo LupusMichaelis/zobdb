@@ -33,8 +33,8 @@ void db_message_get_key(struct db_message * p_message, char ** pp_key);
 
 void db_message_set_payload(struct db_message * p_message, char * p_payload);
 void db_message_get_payload(struct db_message * p_message, char ** pp_payload);
+void db_message_append_payload(struct db_message * p_message, char * p_payload);
 
 void db_message_add_arg(struct db_message ** pp_message, char * p_name, char * p_value);
-void db_message_append_payload(struct db_message * p_message, char * p_payload);
 
 #endif // H_DB_MESSAGE
