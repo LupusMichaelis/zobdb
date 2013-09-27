@@ -71,8 +71,12 @@ void db_store_copy(struct db_store * p_from, struct db_store * p_to)
 	db_app_error(p_from->p_app, "Not implemented", __FILE__, __LINE__);
 }
 
-void db_store_clean(struct db_store * p_store)
+void db_store_clean(struct db_store * p_store, bool has_to_dispose)
 {
-	db_app_error(p_store->p_app, "Not implemented", __FILE__, __LINE__);
+	if(has_to_dispose)
+		if(p_store->fd)
+			close(p_store->fd);
+
+	memset(p_store, 0, sizeof *p_store);
 }
 

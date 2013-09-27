@@ -32,24 +32,35 @@ void db_message_copy(struct db_message * p_message_orig, struct db_message * p_m
 {
 	p_message_dest->p_app = p_message_orig->p_app;
 	p_message_dest->p_verb = p_message_orig->p_verb;
-	p_message_dest->p_key = calloc(1 + strlen(p_message_orig->p_key), sizeof *p_message_orig->p_key);
-	strcpy(p_message_dest->p_key, p_message_orig->p_key);
-	p_message_dest->p_payload = calloc(1 + strlen(p_message_orig->p_payload), sizeof *p_message_orig->p_payload);
-	strcpy(p_message_dest->p_payload, p_message_orig->p_payload);
-}
 
-void db_message_clean(struct db_message * p_message)
-{
-	if(p_message->p_key)
+	if(p_message_orig->p_key)
 	{
-		free(p_message->p_key);
-		p_message->p_key = NULL;
+		p_message_dest->p_key = calloc(1 + strlen(p_message_orig->p_key), sizeof *p_message_orig->p_key);
+		strcpy(p_message_dest->p_key, p_message_orig->p_key);
 	}
 
-	if(p_message->p_payload)
+	if(p_message_orig->p_payload)
 	{
-		free(p_message->p_payload);
-		p_message->p_payload = NULL;
+		p_message_dest->p_payload = calloc(1 + strlen(p_message_orig->p_payload), sizeof *p_message_orig->p_payload);
+		strcpy(p_message_dest->p_payload, p_message_orig->p_payload);
+	}
+}
+
+void db_message_clean(struct db_message * p_message, bool has_to_dispose)
+{
+	if(has_to_dispose)
+	{
+		if(p_message->p_key)
+		{
+			free(p_message->p_key);
+			p_message->p_key = NULL;
+		}
+
+		if(p_message->p_payload)
+		{
+			free(p_message->p_payload);
+			p_message->p_payload = NULL;
+		}
 	}
 
 	p_message->p_verb = NULL;

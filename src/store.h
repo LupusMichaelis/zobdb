@@ -11,7 +11,7 @@ void db_store_create(struct db_store ** pp_store, struct db_app * p_app);
 void db_store_init(struct db_store * p_store, struct db_app * p_app);
 void db_store_clone(struct db_store * p_store, struct db_store ** pp_store);
 void db_store_copy(struct db_store * p_from, struct db_store * p_to);
-void db_store_clean(struct db_store * p_store);
+void db_store_clean(struct db_store * p_store, bool has_to_dispose) ;
 void db_store_dispose(struct db_store ** pp_store);
 
 void db_store_generate_ticket(struct db_store * p_store, char ** pp_ticket);

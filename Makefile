@@ -7,6 +7,7 @@ LDFLAGS= \
 		-g -ggdb
 
 SRCS= \
+	  src/string.c \
 	  src/buffer.c \
 	  src/log.c \
 	  src/store.c \

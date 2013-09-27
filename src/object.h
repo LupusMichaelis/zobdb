@@ -15,6 +15,7 @@ void db_##struct_name##_create(struct db_##struct_name ** pp, struct db_app * p_
 {																							\
 	struct db_##struct_name * p = NULL;														\
 	db_##struct_name##_alloc(&p, p_app);													\
+	db_##struct_name##_clean(p, false);										\
 	db_##struct_name##_init(p, p_app);														\
 	*pp = p;																				\
 }																							\
@@ -22,7 +23,7 @@ void db_##struct_name##_create(struct db_##struct_name ** pp, struct db_app * p_
 #	define APP_DISPOSE(struct_name)															\
 void db_##struct_name##_dispose(struct db_##struct_name ** pp)								\
 {																							\
-	db_##struct_name##_clean(*pp);															\
+	db_##struct_name##_clean(*pp, true);															\
 	free(*pp);																				\
 	*pp = NULL;																				\
 }																							\

@@ -1,6 +1,6 @@
 #include "message.h"
 #include "request-builder.h"
-#include "buffer.h"
+#include "string.h"
 #include "app.h"
 #include "object.h"
 
@@ -18,7 +18,7 @@ struct db_request_builder
 	bool is_bad_request;
 	bool need_moar;
 
-	struct db_buffer * p_buffer;
+	struct db_string * p_buffer;
 
 	// boundaries of the current sequence to analyse in buffer
 	size_t first;
@@ -28,7 +28,7 @@ struct db_request_builder
 	size_t current;
 };
 
-struct db_buffer;
+struct db_string;
 
 // Internal code to avoid the builder to check all the verb string on every input
 static char * gpc_verbs[] = {
@@ -49,7 +49,7 @@ void db_request_builder_init(struct db_request_builder * p_rb, struct db_app * p
 {
 	p_rb->p_app = p_app;
 	db_message_create(&p_rb->p_request, p_app);
-	db_buffer_create(&p_rb->p_buffer, p_app);
+	db_string_create(&p_rb->p_buffer, p_app);
 
 	p_rb->is_bad_request = false;
 	p_rb->need_moar = true;
@@ -60,13 +60,16 @@ void db_request_builder_init(struct db_request_builder * p_rb, struct db_app * p
 
 }
 
-void db_request_builder_clean(struct db_request_builder * p_rb)
+void db_request_builder_clean(struct db_request_builder * p_rb, bool has_to_dispose)
 {
-	if(p_rb->p_buffer)
-		db_buffer_dispose(&p_rb->p_buffer);
+	if(has_to_dispose)
+	{
+		if(p_rb->p_buffer)
+			db_string_dispose(&p_rb->p_buffer);
 
-	if(p_rb->p_request)
-		db_message_dispose(&p_rb->p_request);
+		if(p_rb->p_request)
+			db_message_dispose(&p_rb->p_request);
+	}
 
 	memset(p_rb, 0, sizeof *p_rb);
 }
@@ -83,7 +86,7 @@ void db_request_builder_copy(struct db_request_builder * p_orig, struct db_reque
 	p_dest->is_bad_request = p_orig->is_bad_request;
 	p_dest->need_moar = p_orig->need_moar;
 
-	db_buffer_clone(p_orig->p_buffer, &p_dest->p_buffer);
+	db_string_clone(p_orig->p_buffer, &p_dest->p_buffer);
 
 	// boundaries of the current sequence to analyse in buffer
 	p_dest->first = p_orig->first;
@@ -99,7 +102,7 @@ void db_request_builder_parse(
 		bool * p_need_moar
 		)
 {
-	db_buffer_write(p_rb->p_buffer, &p_rb->last, p_text);
+	db_string_write(p_rb->p_buffer, &p_rb->last, p_text);
 
 	do
 	{
@@ -152,7 +155,7 @@ void db_request_builder_find_verb(struct db_request_builder * p_rb)
 {
 	bool has_found = false;
 	size_t cursor = 0;
-	db_buffer_find_char(p_rb->p_buffer, ' ', p_rb->first, p_rb->last, &cursor, &has_found);
+	db_string_find_char(p_rb->p_buffer, ' ', p_rb->first, p_rb->last, &cursor, &has_found);
 
 	if(!has_found)
 		return; // We don't have enough data to take a decision
@@ -162,7 +165,7 @@ void db_request_builder_find_verb(struct db_request_builder * p_rb)
 
 	//
 	char * p_first = NULL;
-	db_buffer_get(p_rb->p_buffer, &p_first);
+	db_string_get(p_rb->p_buffer, &p_first);
 	p_first += p_rb->first;
 
 	// Look up the table of verbs to find what the client want
@@ -190,12 +193,12 @@ void db_request_builder_parse_new(struct db_request_builder * p_rb)
 	bool has_found = false;
 	size_t line_feed = 0;
 
-	db_buffer_find_char(p_rb->p_buffer, '\n', p_rb->first, p_rb->last, &line_feed, &has_found);
+	db_string_find_char(p_rb->p_buffer, '\n', p_rb->first, p_rb->last, &line_feed, &has_found);
 	if(!has_found)
 		return; // We don't have enough data to take a decision
 
 	size_t word_separator = 0;
-	db_buffer_find_char(p_rb->p_buffer, ' ', p_rb->first, p_rb->last, &word_separator, &has_found);
+	db_string_find_char(p_rb->p_buffer, ' ', p_rb->first, p_rb->last, &word_separator, &has_found);
 
 	if(!has_found)
 	{
@@ -207,11 +210,11 @@ void db_request_builder_parse_new(struct db_request_builder * p_rb)
 
 	char * p_word = NULL;
 
-	db_buffer_get_string(p_rb->p_buffer, p_rb->first, word_separator, &p_word);
+	db_string_get_data(p_rb->p_buffer, p_rb->first, word_separator, &p_word);
 	db_message_set_key(p_rb->p_request, p_word);
 	free(p_word);
 
-	db_buffer_get_string(p_rb->p_buffer, word_separator + 1, line_feed, &p_word);
+	db_string_get_data(p_rb->p_buffer, word_separator + 1, line_feed, &p_word);
 	db_message_set_payload(p_rb->p_request, p_word);
 	free(p_word);
 
@@ -229,21 +232,20 @@ void db_request_builder_parse_read(struct db_request_builder * p_rb)
 	bool has_found = false;
 	size_t line_feed = 0;
 
-	db_buffer_find_char(p_rb->p_buffer, '\n', p_rb->first, p_rb->last, &line_feed, &has_found);
+	db_string_find_char(p_rb->p_buffer, '\n', p_rb->first, p_rb->last, &line_feed, &has_found);
 	if(!has_found)
 		return; // We don't have enough data to take a decision
 
 	size_t word_separator = 0;
-	db_buffer_find_char(p_rb->p_buffer, ' ', p_rb->first, p_rb->last, &word_separator, &has_found);
+	db_string_find_char(p_rb->p_buffer, ' ', p_rb->first, p_rb->last, &word_separator, &has_found);
 
 	char * p_key = NULL;
 	//char * p_option = NULL;
 
 	db_message_set_verb(p_rb->p_request, gpc_verbs[p_rb->verb]);
 
-	db_buffer_get_string(p_rb->p_buffer, p_rb->first, has_found ? word_separator : line_feed, &p_key);
+	db_string_get_data(p_rb->p_buffer, p_rb->first, has_found ? word_separator : line_feed, &p_key);
 	db_message_set_key(p_rb->p_request, p_key);
-	free(p_key);
 
 	/* TODO options!
 	if(has_found)

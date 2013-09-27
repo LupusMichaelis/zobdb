@@ -23,11 +23,20 @@ struct db_client
 APP_ALLOC(client)
 APP_CREATE(client)
 
-void db_client_init(struct db_client * p_db, struct db_app * p_app)
+void db_client_init(struct db_client * p_client, struct db_app * p_app)
 {
-	p_db->p_app = p_app;
-	p_db->remote_addr_size = sizeof p_db->remote_addr;
-	p_db->remote_addr.sun_family = AF_UNIX;
+	p_client->p_app = p_app;
+	p_client->remote_addr_size = sizeof p_client->remote_addr;
+	p_client->remote_addr.sun_family = AF_UNIX;
+}
+
+void db_client_clean(struct db_client * p_client, bool has_to_dispose)
+{
+	if(has_to_dispose)
+		if(p_client->socket_fd > 0)
+			close(p_client->socket_fd);
+
+	memset(p_client, 0, sizeof *p_client);
 }
 
 int db_client_run(struct db_client * p_client)
@@ -39,38 +48,40 @@ int db_client_run(struct db_client * p_client)
 	return EXIT_SUCCESS;
 }
 
-void db_client_connect(struct db_client * p_db, char const * sockname)
+void db_client_connect(struct db_client * p_client, char const * sockname)
 {
-	strcpy(p_db->remote_addr.sun_path, sockname);
+	strcpy(p_client->remote_addr.sun_path, sockname);
 
-	p_db->socket_fd = socket(AF_UNIX, SOCK_STREAM, 0);
-	CHECK_INT(p_db->p_app, p_db->socket_fd);
+	p_client->socket_fd = socket(AF_UNIX, SOCK_STREAM, 0);
+	CHECK_INT(p_client->p_app, p_client->socket_fd);
 
-	CHECK_INT(p_db->p_app, connect(p_db->socket_fd
-				, (struct sockaddr *) &p_db->remote_addr, sizeof p_db->remote_addr));
+	CHECK_INT(p_client->p_app, connect(p_client->socket_fd
+				, (struct sockaddr *) &p_client->remote_addr, sizeof p_client->remote_addr));
 }
 
-void db_client_send(struct db_client * p_db, int in_fd)
+void db_client_send(struct db_client * p_client, int in_fd)
 {
-	int reading_count = read(in_fd, &p_db->buffer, DB_BUFFER_SIZE);
-	CHECK_INT(p_db->p_app, reading_count);
+	int reading_count = read(in_fd, &p_client->buffer, DB_BUFFER_SIZE);
+	CHECK_INT(p_client->p_app, reading_count);
 
 	if(0 == reading_count)
 		return;
 
-	int writting_count = write(p_db->socket_fd, &p_db->buffer, reading_count);
-	CHECK_INT(p_db->p_app, writting_count);
+	int writting_count = write(p_client->socket_fd, &p_client->buffer, reading_count);
+	CHECK_INT(p_client->p_app, writting_count);
 
 	if(reading_count != writting_count)
-		db_app_error(p_db->p_app, "IO mismatch", __FILE__, __LINE__);
+		db_app_error(p_client->p_app, "IO mismatch", __FILE__, __LINE__);
 }
 
-void db_client_recv(struct db_client * p_db)
+void db_client_recv(struct db_client * p_client)
 {
-	int reading_count = read(p_db->socket_fd, &p_db->buffer, DB_BUFFER_SIZE);
-	CHECK_INT(p_db->p_app, reading_count);
-	p_db->buffer[reading_count] = '\0';
+	int reading_count = read(p_client->socket_fd, &p_client->buffer, DB_BUFFER_SIZE);
+	CHECK_INT(p_client->p_app, reading_count);
+	p_client->buffer[reading_count] = '\0';
 
-	if(0 != strcmp("Ok", p_db->buffer))
-		db_app_error(p_db->p_app, "No ack", __FILE__, __LINE__);
+	if(0 != strcmp("Ok", p_client->buffer))
+		db_app_error(p_client->p_app, "No ack", __FILE__, __LINE__);
+
+	p_client->wait_moar = false;
 }

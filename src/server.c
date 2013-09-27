@@ -38,15 +38,24 @@ struct db_server
 APP_ALLOC(server)
 APP_CREATE(server)
 
-void db_server_init(struct db_server * p_db, struct db_app * p_app)
+void db_server_init(struct db_server * p_server, struct db_app * p_app)
 {
-	p_db->p_app = p_app;
+	p_server->p_app = p_app;
 
-	p_db->remote_addr_size = sizeof p_db->remote_addr;
-	p_db->session_fd = -1;
+	p_server->remote_addr_size = sizeof p_server->remote_addr;
+	p_server->session_fd = -1;
 
-	memset(&p_db->self_addr, 0, sizeof p_db->self_addr);
-	p_db->self_addr.sun_family = AF_UNIX;
+	memset(&p_server->self_addr, 0, sizeof p_server->self_addr);
+	p_server->self_addr.sun_family = AF_UNIX;
+}
+
+void db_server_clean(struct db_server * p_server, bool has_to_dispose)
+{
+	if(has_to_dispose)
+		if(p_server->p_store)
+			db_store_dispose(&p_server->p_store);
+
+	memset(p_server, 0, sizeof *p_server);
 }
 
 int db_server_run(struct db_server * p_server)
@@ -106,7 +115,7 @@ int db_server_run(struct db_server * p_server)
 	db_store_dispose(&p_server->p_store);
 }
 
-void db_server_process(struct db_server * p_db, struct db_message * p_request, struct db_message * p_answer)
+void db_server_process(struct db_server * p_server, struct db_message * p_request, struct db_message * p_answer)
 {
 	const char * p_verb = NULL;
 	char * p_key = NULL, * p_payload = NULL;
@@ -117,7 +126,7 @@ void db_server_process(struct db_server * p_db, struct db_message * p_request, s
 	{
 		/*
 		bool has_found = false;
-		db_store_read(p_db->fd, p_key, &p_payload, &has_found);
+		db_store_read(p_server->fd, p_key, &p_payload, &has_found);
 		if(!has_found)
 		{
 			goto end;
@@ -135,7 +144,7 @@ void db_server_process(struct db_server * p_db, struct db_message * p_request, s
 		bool is_ok = false;
 
 		db_message_get_payload(p_request, &p_payload);
-		db_store_write(p_db->p_store, p_key, p_payload, &p_ticket, &is_ok);
+		db_store_write(p_server->p_store, p_key, p_payload, &p_ticket, &is_ok);
 		free(p_payload);
 
 		if(is_ok)
@@ -154,35 +163,35 @@ void db_server_process(struct db_server * p_db, struct db_message * p_request, s
 	free(p_key);
 }
 
-void db_server_listen(struct db_server * p_db, const char * socket_path)
+void db_server_listen(struct db_server * p_server, const char * socket_path)
 {
-	p_db->socket_fd = socket(AF_UNIX, SOCK_STREAM, 0);
-	CHECK_INT(p_db->p_app, p_db->socket_fd);
+	p_server->socket_fd = socket(AF_UNIX, SOCK_STREAM, 0);
+	CHECK_INT(p_server->p_app, p_server->socket_fd);
 
-	strcpy(p_db->self_addr.sun_path, socket_path);
+	strcpy(p_server->self_addr.sun_path, socket_path);
 
-	CHECK_INT(p_db->p_app, bind(p_db->socket_fd
-				, (struct sockaddr *) &p_db->self_addr
-				, sizeof p_db->self_addr));
+	CHECK_INT(p_server->p_app, bind(p_server->socket_fd
+				, (struct sockaddr *) &p_server->self_addr
+				, sizeof p_server->self_addr));
 
-	CHECK_INT(p_db->p_app, listen(p_db->socket_fd, 0));
+	CHECK_INT(p_server->p_app, listen(p_server->socket_fd, 0));
 }
 
-void db_server_session_begin(struct db_server * p_db)
+void db_server_session_begin(struct db_server * p_server)
 {
-	CHECK_INT(p_db->p_app, p_db->session_fd = accept(p_db->socket_fd
-				, (struct sockaddr *) &p_db->remote_addr
-				, &p_db->remote_addr_size));
+	CHECK_INT(p_server->p_app, p_server->session_fd = accept(p_server->socket_fd
+				, (struct sockaddr *) &p_server->remote_addr
+				, &p_server->remote_addr_size));
 }
 
-void db_server_session_end(struct db_server * p_db)
+void db_server_session_end(struct db_server * p_server)
 {
-	close(p_db->session_fd);
+	close(p_server->session_fd);
 }
 
 #define min(l, r) (((l) > (r)) ? (r) : (l))
 
-void db_server_read(struct db_server * p_db, char **pp_payload)
+void db_server_read(struct db_server * p_server, char **pp_payload)
 {
 	char * p_payload = NULL;
 	int payload_size = 0;
@@ -192,23 +201,23 @@ void db_server_read(struct db_server * p_db, char **pp_payload)
 	int reading_count = 0;
 	do
 	{
-		reading_count = read(p_db->session_fd, &p_db->buffer, DB_BUFFER_SIZE);
-		CHECK_INT(p_db->p_app, reading_count);
+		reading_count = read(p_server->session_fd, &p_server->buffer, DB_BUFFER_SIZE);
+		CHECK_INT(p_server->p_app, reading_count);
 
 		if(0 == reading_count)
 			break;
 
 		payload_size += min(DB_BUFFER_SIZE, reading_count);
 		p_payload = realloc(p_payload, (payload_size + 1) * sizeof *p_payload);
-		CHECK_NULL(p_db->p_app, p_payload);
-		strncat(p_payload, p_db->buffer, min(DB_BUFFER_SIZE, reading_count));
+		CHECK_NULL(p_server->p_app, p_payload);
+		strncat(p_payload, p_server->buffer, min(DB_BUFFER_SIZE, reading_count));
 
 	} while(reading_count > DB_BUFFER_SIZE);
 
 	*pp_payload = p_payload;
 }
 
-void db_server_answer(struct db_server * p_db, struct db_message * p_answer)
+void db_server_answer(struct db_server * p_server, struct db_message * p_answer)
 {
 	char * p_verb = NULL, * p_key = NULL, * p_payload = NULL;
 	db_message_get_verb(p_answer, &p_verb);
@@ -224,8 +233,8 @@ void db_server_answer(struct db_server * p_db, struct db_message * p_answer)
 			, p_payload ? p_payload : "(null)"
 	);
 
-	int written = write(p_db->session_fd, buffer, min(write_count, 1024 - 1));
-	CHECK_INT(p_db->p_app, written);
+	int written = write(p_server->session_fd, buffer, min(write_count, 1024 - 1));
+	CHECK_INT(p_server->p_app, written);
 
 	free(p_key);
 	free(p_payload);
