@@ -7,6 +7,11 @@ struct db_app;
 #	include <stddef.h>
 #	include <stdbool.h>
 
+void db_string_vector_alloc(struct db_string *** ppp, struct db_app * p_app, size_t count);
+void db_string_vector_create(struct db_string *** ppp, struct db_app * p_app, size_t count);
+void db_string_vector_dispose(struct db_string *** pp);
+void db_string_vector_clone(struct db_string ** pp, struct db_string *** ppp);
+
 void db_string_create(struct db_string ** pp_string, struct db_app * p_app);
 void db_string_init(struct db_string * p_string, struct db_app * p_app);
 

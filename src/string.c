@@ -3,6 +3,7 @@
 #include "buffer.h"
 #include "app.h"
 #include "object.h"
+#include "object-vector.h"
 
 #include <stdlib.h>
 #include <stdlib.h>
@@ -14,6 +15,11 @@ struct db_string
 	struct db_app * p_app;
 	struct db_buffer * p_buffer;
 };
+
+APP_VECTOR_ALLOC(string)
+APP_VECTOR_CREATE(string)
+APP_VECTOR_CLONE(string)
+APP_VECTOR_DISPOSE(string)
 
 APP_ALLOC(string)
 APP_CREATE(string)

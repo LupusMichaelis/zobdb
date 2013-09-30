@@ -26,12 +26,12 @@ void db_app_init(struct db_app * p_app, int argc, char ** argv);
 
 int db_app_run(struct db_app * p_app);
 
-void db_app_config_get(struct db_app * p_app, const char * p_name, void ** pp_value);
+void db_app_config_get(struct db_app * p_app, char * p_name, char ** pp_value);
 
-void db_app_open_log(struct db_app * p_app, const char * filename);
+void db_app_open_log(struct db_app * p_app, char * filename);
 
-void db_app_error(struct db_app * p_app, const char * p_error, const char * filename, int filenumber);
-void db_app_log(struct db_app * p_app, char const * text, const char * filename, int filenumber);
+void db_app_error(struct db_app * p_app, char * p_error, char * filename, int filenumber);
+void db_app_log(struct db_app * p_app, char * text, char * filename, int filenumber);
 
 #endif // H_DB_APP
 

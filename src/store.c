@@ -23,7 +23,7 @@ void db_store_init(struct db_store * p_store, struct db_app * p_app)
 	p_store->p_app = p_app;
 
 	const char * filename = NULL;
-	db_app_config_get(p_store->p_app, "store", (void **)&filename);
+	db_app_config_get(p_store->p_app, "store", (char **)&filename);
 	p_store->fd = open(filename, 0600 | O_APPEND | O_WRONLY);
 
 	CHECK_INT(p_store->p_app, p_store->fd);
