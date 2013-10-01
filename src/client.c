@@ -42,7 +42,10 @@ void db_client_clean(struct db_client * p_client, bool has_to_dispose)
 
 int db_client_run(struct db_client * p_client)
 {
-	db_client_connect(p_client, SOCK_NAME);
+	char * p_sock_name = NULL;
+	db_app_config_get(p_client->p_app, "socket", &p_sock_name);
+
+	db_client_connect(p_client, p_sock_name);
 	db_client_send(p_client, fileno(stdin));
 	do db_client_recv(p_client); while(p_client->wait_moar);
 

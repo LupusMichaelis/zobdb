@@ -35,28 +35,24 @@ void db_config_vector_get(struct db_config ** pp, size_t position, char ** pp_va
 
 void db_config_vector_get_by_value(struct db_config ** pp, char * p_value, char ** pp_value)
 {
-	struct db_config ** pp_config = pp;
-
 	while(*pp)
 		if(0 == strcmp(p_value, (*pp)->key_value.p_value))
 			break;
 		else
 			++pp;
 
-	*pp_value = NULL == *pp ? NULL : (*pp_config)->key_value.p_value;
+	*pp_value = NULL == *pp ? NULL : (*pp)->key_value.p_value;
 }
 
 void db_config_vector_get_by_name(struct db_config ** pp, char * p_name, char ** pp_value)
 {
-	struct db_config ** pp_config = pp;
-
 	while(*pp)
 		if(0 == strcmp(p_name, (*pp)->key_value.p_name))
 			break;
 		else
 			++pp;
 
-	*pp_value = NULL == *pp ? NULL : (*pp_config)->key_value.p_value;
+	*pp_value = NULL == *pp ? NULL : (*pp)->key_value.p_value;
 }
 
 APP_ALLOC(config)

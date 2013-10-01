@@ -62,10 +62,16 @@ int db_server_run(struct db_server * p_server)
 {
 	daemon(1, 0);
 
-	db_app_open_log(p_server->p_app, LOG_NAME);
+	char * p_log_name = NULL;
+	db_app_config_get(p_server->p_app, "log", &p_log_name);
+
+	db_app_open_log(p_server->p_app, p_log_name);
 	db_store_create(&p_server->p_store, p_server->p_app);
 
-	db_server_listen(p_server, SOCK_NAME);
+	char * p_sock_name = NULL;
+	db_app_config_get(p_server->p_app, "socket", &p_sock_name);
+
+	db_server_listen(p_server, p_sock_name);
 	do
 	{
 		struct db_request_builder * p_rb = NULL;

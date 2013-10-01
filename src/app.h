@@ -13,10 +13,6 @@
 		if((ptr_val) == NULL) \
 			db_app_error(p_app, strerror(errno), __FILE__, __LINE__);
 
-#	define LOG_NAME "./log"
-#	define STORE_NAME "./datas"
-#	define SOCK_NAME "./con"
-
 #	define DB_BUFFER_SIZE 4096
 
 struct db_app;

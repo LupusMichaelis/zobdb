@@ -11,6 +11,7 @@
 #include <fcntl.h>
 #include <string.h>
 #include <stdbool.h>
+#include <assert.h>
 
 static void db_app_signal(int s)
 {
@@ -36,6 +37,8 @@ struct db_app
 
 	void * p_main_module;
 	struct db_config ** pp_config;
+
+	struct db_log * p_log_service;
 };
 
 // Don't use the APP_ALLOC macro, we don't have an app for error handling!
@@ -49,9 +52,16 @@ void db_app_alloc(struct db_app ** pp_app)
 	*pp_app = p_app;
 }
 
-#include <assert.h>
+#define LOG_NAME	"./log"
+#define STORE_NAME	"./datas"
+#define SOCK_NAME	"./con"
 
-static struct pair tbl_config[] = { { "store", STORE_NAME, }, };
+static struct pair tbl_config[] =
+	{
+		{ "store", STORE_NAME, },
+		{ "log", LOG_NAME, },
+		{ "socket", SOCK_NAME, },
+	};
 
 void db_app_init(struct db_app * p_app, int argc, char ** argv)
 {
