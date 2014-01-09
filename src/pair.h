@@ -4,7 +4,7 @@
 struct pair
 {
 	char * p_name;
-	char * p_value;
+	void * p_value;
 };
 
 #endif // DB_PAIR

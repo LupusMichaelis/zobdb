@@ -16,6 +16,7 @@
 #include "app.h"
 #include "message.h"
 #include "object.h"
+#include "log.h"
 
 struct db_app;
 struct db_store;
@@ -62,15 +63,10 @@ int db_server_run(struct db_server * p_server)
 {
 	daemon(1, 0);
 
-	char * p_log_name = NULL;
-	db_app_config_get(p_server->p_app, "log", &p_log_name);
-
-	db_app_open_log(p_server->p_app, p_log_name);
-	db_store_create(&p_server->p_store, p_server->p_app);
-
 	char * p_sock_name = NULL;
-	db_app_config_get(p_server->p_app, "socket", &p_sock_name);
+	db_app_config_get(p_server->p_app, "socket.name", &p_sock_name);
 
+	db_store_create(&p_server->p_store, p_server->p_app);
 	db_server_listen(p_server, p_sock_name);
 	do
 	{
@@ -141,8 +137,7 @@ void db_server_process(struct db_server * p_server, struct db_message * p_reques
 		db_message_set_payload(p_answer, p_payload);
 		*/
 
-		// Trololol, I'm a read server!
-		db_message_set_payload(p_answer, "Ko Write only");
+		db_message_set_payload(p_answer, "Ko\nNot implemented");
 	}
 	else if(0 == strcmp("new", p_verb))
 	{
@@ -153,17 +148,18 @@ void db_server_process(struct db_server * p_server, struct db_message * p_reques
 		db_store_write(p_server->p_store, p_key, p_payload, &p_ticket, &is_ok);
 		free(p_payload);
 
+		db_app_log(p_server->p_app, "Write!", __FILE__, __LINE__);
+
 		if(is_ok)
 		{
 			char answer[100];
-			snprintf(answer, 99, "Ok %s", p_ticket);
+			snprintf(answer, sizeof answer / sizeof answer[0] - 1 , "Ok %s", p_ticket);
 			db_message_set_payload(p_answer, answer);
 		}
 		else
 		{
+			db_message_set_payload(p_answer, "Ko\nFailure");
 		}
-
-		//db_message_set_payload(p_answer, "Ko\nRead only");
 	}
 
 	free(p_key);
@@ -225,23 +221,17 @@ void db_server_read(struct db_server * p_server, char **pp_payload)
 
 void db_server_answer(struct db_server * p_server, struct db_message * p_answer)
 {
-	char * p_verb = NULL, * p_key = NULL, * p_payload = NULL;
+	char * p_verb = NULL, * p_payload = NULL;
 	db_message_get_verb(p_answer, &p_verb);
-	db_message_get_key(p_answer, &p_key);
 	db_message_get_payload(p_answer, &p_payload);
 
 	char buffer[1024];
 	memset(&buffer, 0, sizeof buffer);
 
-	int write_count = snprintf(buffer, 1024 - 1, "Request '%s' key '%s' value '%s'"
-			, p_verb
-			, p_key
-			, p_payload ? p_payload : "(null)"
-	);
+	int write_count = snprintf(buffer, sizeof buffer / sizeof buffer[0] - 1, p_payload);
 
 	int written = write(p_server->session_fd, buffer, min(write_count, 1024 - 1));
 	CHECK_INT(p_server->p_app, written);
 
-	free(p_key);
 	free(p_payload);
 }

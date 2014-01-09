@@ -43,7 +43,7 @@ void db_client_clean(struct db_client * p_client, bool has_to_dispose)
 int db_client_run(struct db_client * p_client)
 {
 	char * p_sock_name = NULL;
-	db_app_config_get(p_client->p_app, "socket", &p_sock_name);
+	db_app_config_get(p_client->p_app, "socket.name", &p_sock_name);
 
 	db_client_connect(p_client, p_sock_name);
 	db_client_send(p_client, fileno(stdin));
@@ -84,8 +84,6 @@ void db_client_recv(struct db_client * p_client)
 	CHECK_INT(p_client->p_app, reading_count);
 	p_client->buffer[reading_count] = '\0';
 
-	if(0 != strcmp("Ok", p_client->buffer))
+	if(p_client->buffer != strstr(p_client->buffer, "Ok"))
 		db_app_error(p_client->p_app, "No ack", __FILE__, __LINE__);
-
-	p_client->wait_moar = false;
 }

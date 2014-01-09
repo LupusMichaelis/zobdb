@@ -7,8 +7,5 @@ app
 datas
 log
 
-client
-readd
-writed
-notifyd
-stored
+db
+dbd

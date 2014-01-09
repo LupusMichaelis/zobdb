@@ -23,6 +23,7 @@ void db_app_init(struct db_app * p_app, int argc, char ** argv);
 int db_app_run(struct db_app * p_app);
 
 void db_app_config_get(struct db_app * p_app, char * p_name, char ** pp_value);
+void db_app_name_get_reference(struct db_app * p_app, const char ** pp_name);
 
 void db_app_open_log(struct db_app * p_app, char * filename);
 

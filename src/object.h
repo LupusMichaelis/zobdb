@@ -1,6 +1,11 @@
 #ifndef H_DB_OBJECT
 #	define H_DB_OBJECT
 
+#	include "app.h"
+
+#	include <stdlib.h>
+#	include <stdbool.h>
+
 #	define APP_ALLOC(struct_name)															\
 void db_##struct_name##_alloc(struct db_##struct_name ** pp, struct db_app * p_app)			\
 {																							\

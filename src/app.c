@@ -4,6 +4,7 @@
 #include "server.h"
 #include "string.h"
 #include "config.h"
+#include "log.h"
 
 #include <unistd.h>
 #include <stdlib.h>
@@ -33,12 +34,10 @@ struct db_app
 	char * p_error;
 	void * p_con;
 
-	int log_fd;
-
 	void * p_main_module;
 	struct db_config ** pp_config;
 
-	struct db_log * p_log_service;
+	struct db_log * p_log;
 };
 
 // Don't use the APP_ALLOC macro, we don't have an app for error handling!
@@ -52,15 +51,11 @@ void db_app_alloc(struct db_app ** pp_app)
 	*pp_app = p_app;
 }
 
-#define LOG_NAME	"./log"
-#define STORE_NAME	"./datas"
-#define SOCK_NAME	"./con"
-
 static struct pair tbl_config[] =
 	{
-		{ "store", STORE_NAME, },
-		{ "log", LOG_NAME, },
-		{ "socket", SOCK_NAME, },
+		{ "store", "./datas", },
+		{ "log.file", "./log", },
+		{ "socket.name", "./con", },
 	};
 
 void db_app_init(struct db_app * p_app, int argc, char ** argv)
@@ -81,8 +76,8 @@ void db_app_init(struct db_app * p_app, int argc, char ** argv)
 		--slash;
 	while(p_app->name != slash);
 
-	p_app->is_client = 0 == strcmp(slash, "client");
-	p_app->is_server = 0 == strcmp(slash, "writed");
+	p_app->is_client = 0 == strcmp(slash, "db");
+	p_app->is_server = 0 == strcmp(slash, "dbd");
 
 	assert((p_app->is_client && !p_app->is_server) || (!p_app->is_client && p_app->is_server));
 
@@ -95,6 +90,8 @@ void db_app_init(struct db_app * p_app, int argc, char ** argv)
 		db_config_vector_set(pp_config, element_count, &tbl_config[element_count]);
 
 	p_app->pp_config = pp_config;
+
+	db_log_create(&p_app->p_log, p_app);
 
 	// Instantiate engine //////////////////////////////////////////////////
 	if(p_app->is_client)
@@ -117,33 +114,23 @@ int db_app_run(struct db_app * p_app)
 
 void db_app_config_get(struct db_app * p_app, char * p_name, char ** pp_value)
 {
-	db_config_vector_get_by_name(p_app->pp_config, p_name, pp_value);
+	char * p_value;
+	db_config_vector_get_by_name(p_app->pp_config, p_name, (void *) &p_value);
+	*pp_value = p_value;
+}
+
+void db_app_name_get_reference(struct db_app * p_app, const char ** pp_name)
+{
+	*pp_name = p_app->name;
 }
 
 void db_app_error(struct db_app * p_app, char * p_error, char * filename, int filenumber)
 {
-	FILE * log = fdopen(p_app->log_fd, "a");
-	if(NULL == log)
-	{
-		log = stderr;
-		fprintf(log, "%s: %s[%d] %s\n", p_app->name, __FILE__, __LINE__, strerror(errno));
-	}
-
-	fprintf(log, "%s: %s[%d] %s\n", p_app->name, filename, filenumber, p_error);
-
-	exit(EXIT_FAILURE);
-}
-
-void db_app_open_log(struct db_app * p_app, char * filename)
-{
-	p_app->log_fd = open(filename, O_CREAT | O_APPEND | O_WRONLY, 0600);
-	CHECK_INT(p_app, p_app->log_fd);
+	db_log_error(p_app->p_log, p_error, filename, filenumber);
 }
 
 void db_app_log(struct db_app * p_app, char * text, char * filename, int filenumber)
 {
-	FILE * log = fdopen(p_app->log_fd, "a");
-	fprintf(log, "%s: %s[%d] %s\n", p_app->name, filename, filenumber, text);
+	db_log_write(p_app->p_log, text, filename, filenumber);
 }
-
 
