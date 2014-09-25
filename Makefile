@@ -1,10 +1,11 @@
 
 CFLAGS=-Wall \
 		-Werror \
-		-g -ggdb
+		-g -ggdb \
 
 LDFLAGS= \
-		-g -ggdb
+		-ldb \
+		-g -ggdb \
 
 SRCS= \
 	  src/config.c \
@@ -18,22 +19,22 @@ SRCS= \
 	  src/message.c \
 	  src/request-builder.c \
 
+.PHONY: db dbd test-data
 
 OBJS=$(SRCS:.c=.o)
 
 TARGET= \
-		client \
-		readd \
-		writed \
-		notifyd \
-		stored
+		db \
+		dbd
 
 all: $(TARGET)
 
 app: app.o $(OBJS)
 
+tests/buffer: tests/buffer.o $(OBJS)
+
 $(TARGET): app
 	-ln -s ./app $@
 
 clean:
-	-rm -rf $(OBJS) app $(TARGET) $(TARGET:=.o)
+	-$(RM) $(OBJS) app $(TARGET) $(TARGET:=.o) tests/buffer.o

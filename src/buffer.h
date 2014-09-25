@@ -13,8 +13,6 @@ struct db_app;
 void db_buffer_create(struct db_buffer ** pp_buffer, struct db_app * p_app);
 void db_buffer_init(struct db_buffer * p_buffer, struct db_app * p_app);
 
-void db_buffer_set(struct db_buffer * p_buffer, char * p_data);
-void db_buffer_set_is_fixed_size(struct db_buffer * p_buffer, bool is_fixed);
 void db_buffer_set_is_auto(struct db_buffer * p_buffer, bool is_auto);
 
 void db_buffer_get(struct db_buffer * p_buffer, char ** pp_text);
@@ -37,5 +35,16 @@ void db_buffer_find_char(
 		size_t * p_position,
 		bool * p_has_found
 		);
+
+void db_buffer_find_string(
+		struct db_buffer * p_buffer,
+		char const * p_needle,
+		size_t first,
+		size_t last,
+		size_t * p_position,
+		bool * p_has_found
+		);
+
+void db_buffer_fill(struct db_buffer * p_buffer, size_t size, char value);
 
 #endif // H_DB_BUFFER
