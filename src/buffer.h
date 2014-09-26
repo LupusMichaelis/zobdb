@@ -29,9 +29,9 @@ void db_buffer_write(struct db_buffer * p_buffer, size_t * p_from, const char * 
 
 void db_buffer_find_char(
 		struct db_buffer * p_buffer,
-		char needle,
-		size_t first,
-		size_t last,
+		char const needle,
+		size_t const first,
+		size_t const last,
 		size_t * p_position,
 		bool * p_has_found
 		);

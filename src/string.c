@@ -30,7 +30,7 @@ void db_string_init(struct db_string * p_string, struct db_app * p_app)
 {
 	p_string->p_app = p_app;
 	db_buffer_create(&p_string->p_buffer, p_app);
-	db_buffer_set_is_fixed_size(p_string->p_buffer, false);
+	db_buffer_set_is_auto(p_string->p_buffer, true);
 }
 
 void db_string_clean(struct db_string * p_string, bool has_to_dispose)
@@ -65,6 +65,7 @@ void db_string_get(struct db_string * p_string, char ** pp_text)
 
 void db_string_get_data(struct db_string * p_string, size_t first, size_t last, char ** pp_data)
 {
+	// XXX memory leak!!!
 	db_buffer_get_data(p_string->p_buffer, first, last, pp_data);
 }
 
@@ -80,5 +81,21 @@ void db_string_find_char(
 	db_buffer_find_char(p_string->p_buffer, needle, first, last, p_position, p_has_found);
 }
 
+void db_string_find_string(
+		struct db_string * p_string,
+		char const * p_needle,
+		size_t first,
+		size_t last,
+		size_t * p_position,
+		bool * p_has_found
+		)
+{
+	db_buffer_find_string(p_string->p_buffer, p_needle, first, last, p_position, p_has_found);
+}
 
+
+void db_string_fill(struct db_string * p_string, size_t size, char value)
+{
+	db_buffer_fill(p_string->p_buffer, size, value);
+}
 

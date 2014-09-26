@@ -39,5 +39,16 @@ void db_string_find_char(
 		bool * p_has_found
 		);
 
+void db_string_find_string(
+		struct db_string * p_string,
+		char const * p_needle,
+		size_t first,
+		size_t last,
+		size_t * p_position,
+		bool * p_has_found
+		);
+
+void db_string_fill(struct db_string * p_string, size_t size, char value);
+
 #endif // H_DB_STRING
 

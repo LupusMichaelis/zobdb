@@ -76,7 +76,10 @@ void db_buffer_ensure(struct db_buffer * p_buffer, size_t from, size_t input_siz
 		return;
 
 	if(!p_buffer->is_auto)
-		db_app_error(p_buffer->p_app, "Attempt to resize a fixed size buffer", __FILE__, __LINE__);
+	{
+		_db_buffer_error(p_buffer, "Attempt to resize a fixed size buffer", __FILE__, __LINE__);
+		return;
+	}
 
 	int current_size = p_buffer->p_end - p_buffer->p_begin;
 	// We compute the memory actually requested, and count how many chunks are needed

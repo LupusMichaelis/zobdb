@@ -32,6 +32,7 @@ all: $(TARGET)
 app: app.o $(OBJS)
 
 tests/buffer: tests/buffer.o $(OBJS)
+tests/string: tests/string.o $(OBJS)
 
 $(TARGET): app
 	-ln -s ./app $@
