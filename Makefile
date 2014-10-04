@@ -18,6 +18,7 @@ SRCS= \
 	  src/client.c \
 	  src/message.c \
 	  src/request-builder.c \
+	  src/observable.c \
 
 .PHONY: db dbd test-data
 
@@ -31,6 +32,7 @@ all: $(TARGET)
 
 app: app.o $(OBJS)
 
+tests/observable: tests/observable.o $(OBJS)
 tests/buffer: tests/buffer.o $(OBJS)
 tests/string: tests/string.o $(OBJS)
 
