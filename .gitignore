@@ -7,5 +7,7 @@ app
 datas
 log
 
+tests/error
+
 db
 dbd

@@ -8,6 +8,9 @@ LDFLAGS= \
 		-g -ggdb \
 
 SRCS= \
+	  src/error.c \
+
+# \
 	  src/config.c \
 	  src/string.c \
 	  src/buffer.c \
@@ -20,7 +23,14 @@ SRCS= \
 	  src/request-builder.c \
 	  src/observable.c \
 
-.PHONY: db dbd test-data
+TESTS= \
+	   tests/error \
+	   tests/vector \
+	   tests/observable \
+	   tests/buffer \
+	   tests/string \
+
+.PHONY: db dbd test-data tests
 
 OBJS=$(SRCS:.c=.o)
 
@@ -28,16 +38,16 @@ TARGET= \
 		db \
 		dbd
 
-all: $(TARGET)
+all: $(TESTS) $(TARGET)
 
 app: app.o $(OBJS)
 
-tests/observable: tests/observable.o $(OBJS)
-tests/buffer: tests/buffer.o $(OBJS)
-tests/string: tests/string.o $(OBJS)
+tests: $(TESTS)
+
+$(TESTS): $(@:=.o) $(OBJS)
 
 $(TARGET): app
 	-ln -s ./app $@
 
 clean:
-	-$(RM) $(OBJS) app $(TARGET) $(TARGET:=.o) tests/buffer.o
+	-$(RM) $(OBJS) app app.o $(TARGET) $(TARGET:=.o) $(TESTS) $(TESTS:=.o)
