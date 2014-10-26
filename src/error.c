@@ -10,19 +10,16 @@
 
 #include <stdbool.h>
 
-static bool _db_error_make_format(char ** pp_full_fmt, enum db_error_level level, char const * p_file, int const line, char const * p_fmt)
+struct db_error
+{
+	bool is_fatal;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+static bool _db_error_make_format(char ** pp_full_fmt, char const * p_file, int const line, char const * p_fmt)
 {
 	size_t fmt_size = FMT_SIZE;
 	size_t written = 0;
-
-	char * p_level = NULL;
-	switch(level)
-	{
-		case DB_ERROR_NOTICE:	p_level = "NOTICE"; break;
-		case DB_ERROR_WARNING:	p_level = "WARNING"; break;
-		case DB_ERROR_FAILURE:	p_level = "FAILURE"; break;
-		default:				p_level = "(unknown)";
-	}
 
 	// Build the base format string
 	do
@@ -34,7 +31,7 @@ static bool _db_error_make_format(char ** pp_full_fmt, enum db_error_level level
 			return false;
 		}
 
-		written = snprintf(*pp_full_fmt, fmt_size, "[%-10s] " FILE_LINE_FMT " %s", p_level, p_file, line, p_fmt);
+		written = snprintf(*pp_full_fmt, fmt_size, FILE_LINE_FMT " %s", p_file, line, p_fmt);
 
 		if(written < 0)
 		{
@@ -52,22 +49,55 @@ static bool _db_error_make_format(char ** pp_full_fmt, enum db_error_level level
 	return true;
 }
 
-void db_error_printf(enum db_error_level level, char const * p_file, int const line, char const * p_fmt, ...)
+static void _db_error_printf(struct db_error * p_error, char const * p_file, int const line, char const * p_fmt, va_list ap)
 {
 	char * p_full_fmt = NULL;
-	if(!_db_error_make_format(&p_full_fmt, level, p_file, line, p_fmt))
+	if(!_db_error_make_format(&p_full_fmt, p_file, line, p_fmt))
 		exit(EXIT_FAILURE);
 
 	// Lets atomically print the error message
-	va_list ap;
-	va_start(ap, p_fmt);
 	vfprintf(stderr, p_full_fmt, ap);
-	va_end(ap);
 
 	if(p_full_fmt)
 		free(p_full_fmt);
 
-	if(DB_ERROR_FAILURE == level)
+	if(!p_error || p_error->is_fatal)
 		exit(EXIT_FAILURE);
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+void db_error_alloc(struct db_error ** pp_error)
+{
+	struct db_error * p = NULL;
+	p = calloc(1, sizeof *p);
+	if(NULL == p)
+	{
+		fprintf(stderr, FILE_LINE_FMT " %m", __FILE__, __LINE__);
+		exit(EXIT_FAILURE);
+	}
+	*pp_error = p;
+}
+
+void db_error_printf(struct db_error * p_error, char const * p_file, int const line, char const * p_fmt, ...)
+{
+	va_list ap;
+	va_start(ap, p_fmt);
+	_db_error_printf(p_error, p_file, line, p_fmt, ap);
+	va_end(ap);
+}
+
+void db_error_init(struct db_error * p_error)
+{
+	p_error->is_fatal = true;
+}
+
+void db_error_set_is_fatal(struct db_error * p_error, bool is_fatal)
+{
+	p_error->is_fatal = is_fatal;
+}
+
+void db_error_is_fatal(struct db_error * p_error, bool * p_is_fatal)
+{
+	*p_is_fatal = p_error->is_fatal;
+}
