@@ -145,22 +145,35 @@ void zob_server_process(struct zob_server * p_server, struct zob_message * p_req
 			zob_message_set_payload(p_answer, "Ko\nNot Found");
 
 	}
-	else if(0 == strcmp("new", p_verb))
+	else if(0 == strcmp("new", p_verb) || 0 == strcmp("update", p_verb))
+	{
+		bool is_ok = false;
+		bool is_overwrite = 0 == strcmp("update", p_verb);
+
+		zob_message_get_payload(p_request, &p_payload);
+		zob_store_write(p_server->p_store, p_key, p_payload, is_overwrite, &is_ok);
+		free(p_payload);
+
+		zob_app_log(gp_app, p_key, __FILE__, __LINE__);
+
+		if(is_ok)
+			zob_message_set_payload(p_answer, "Ok");
+		else
+			zob_message_set_payload(p_answer, "Ko");
+	}
+	else if(0 == strcmp("delete", p_verb))
 	{
 		bool is_ok = false;
 
 		zob_message_get_payload(p_request, &p_payload);
-		zob_store_write(p_server->p_store, p_key, p_payload, &is_ok);
-		free(p_payload);
+		zob_store_delete(p_server->p_store, p_key, &is_ok);
 
-		zob_app_log(gp_app, "Write!", __FILE__, __LINE__);
+		zob_app_log(gp_app, p_key, __FILE__, __LINE__);
 
 		if(is_ok)
-		{
 			zob_message_set_payload(p_answer, "Ok");
-		}
 		else
-			zob_message_set_payload(p_answer, "Ko\nFailure");
+			zob_message_set_payload(p_answer, "Ko");
 	}
 	else if(0 == strcmp("stop", p_verb))
 	{

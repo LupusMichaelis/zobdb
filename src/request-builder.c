@@ -138,8 +138,6 @@ void zob_request_builder_parse(
 				default:
 					zob_app_error(gp_app, "Invalid verb identifier", __FILE__, __LINE__);
 			}
-
-			zob_message_set_verb(p_rb->p_request, gpc_verbs[p_rb->verb]);
 		}
 		if(p_rb->is_bad_request)
 			break;
@@ -261,70 +259,36 @@ void zob_request_builder_parse_new(struct zob_request_builder * p_rb)
 
 void zob_request_builder_parse_clone(struct zob_request_builder * p_rb)
 {
-	fprintf(stderr, "Parse clone\n");
+	zob_app_log(gp_app, "Parse clone", __FILE__, __LINE__);
 	p_rb->is_bad_request = true;
 }
 
 void zob_request_builder_parse_read(struct zob_request_builder * p_rb)
 {
 	zob_request_builder_parse_header(p_rb);
-
-	/* TODO options!
-	if(has_found)
-	{
-		// Look up the table of options to find how to read the value
-		char ** pp_options = &gpc_read_options[0];
-		do
-			if(0 == strncmp(*pp_options, p_first, strlen(*pp_options)))
-				break;
-		while(*++pp_options);
-
-		if(*pp_options)
-		{
-			p_rb->options |= 2 << pp_options - gpc_options;
-			p_rb->has_verb = true;
-		}
-		else
-		{
-			p_rb->is_bad_request = true;
-			p_rb->need_moar = false;
-		}
-	}
-	*/
-
 	p_rb->need_moar = false;
 }
 
 void zob_request_builder_parse_delete(struct zob_request_builder * p_rb)
 {
-	fprintf(stderr, "Parse delete\n");
-	p_rb->is_bad_request = true;
-}
-
-void zob_request_builder_parse_update(struct zob_request_builder * p_rb)
-{
-	zob_request_builder_parse_header(p_rb);
-
-	// An update request requires a body, but the header consumed all bytes!
-	if(p_rb->first > p_rb->last)
-	{
-		p_rb->need_moar = false;
-		p_rb->is_bad_request = true;
-		return;
-	}
-
-	////////////////////////////////////////////////////////////////////////////////
 	bool has_found = false;
 	size_t line_feed = 0;
 
 	zob_string_find_char(p_rb->p_buffer, '\n', p_rb->first, p_rb->last, &line_feed, &has_found);
-	if(!has_found)
-		return; // We don't have enough data to take a decision
+	assert(has_found);
 
-	char * p_payload = NULL;
-	zob_string_get_data(p_rb->p_buffer, p_rb->first, line_feed, &p_payload);
-	zob_string_write(p_rb->p_payload, &p_rb->current, p_payload);
-	free(p_payload);
+	char * p_word = NULL;
 
+	zob_string_get_data(p_rb->p_buffer, p_rb->first, line_feed, &p_word);
+	zob_message_set_key(p_rb->p_request, p_word);
+	free(p_word);
+
+	zob_message_set_verb(p_rb->p_request, gpc_verbs[p_rb->verb]);
+	p_rb->is_bad_request = false;
 	p_rb->need_moar = false;
+}
+
+void zob_request_builder_parse_update(struct zob_request_builder * p_rb)
+{
+	zob_request_builder_parse_new(p_rb);
 }

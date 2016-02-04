@@ -24,6 +24,11 @@ void zob_store_write(
 		struct zob_store * p_store,
 		const char * p_key,
 		const char * p_value,
+		bool is_overwrite,
 		bool * p_is_ok);
+void zob_store_delete(
+		struct zob_store * p_store,
+		const char * p_key,
+		bool * is_ok);
 
 #endif // H_ZOB_STORE

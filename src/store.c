@@ -52,6 +52,7 @@ void zob_store_write(
 		struct zob_store * p_store,
 		const char * p_key,
 		const char * p_value,
+		bool is_overwrite,
 		bool * is_ok)
 {
 	DBT key, data;
@@ -64,12 +65,15 @@ void zob_store_write(
 	data.size = strlen(p_value) + 1;
 	data.data = (void *) p_value;
 
-	int ret = p_store->p_dbh->put(p_store->p_dbh, NULL, &key, &data, DB_NOOVERWRITE);
+	int ret = p_store->p_dbh->put(p_store->p_dbh, NULL, &key, &data,
+			is_overwrite ? 0 : DB_NOOVERWRITE);
+	*is_ok = (ret == 0);
+	if(DB_KEYEXIST == ret)
+		return;
+
 	CHECK_BDB_INT(ret);
 
 	p_store->p_dbh->sync(p_store->p_dbh, 0);
-
-	*is_ok = (ret == 0);
 }
 
 void zob_store_read(
@@ -107,4 +111,24 @@ void zob_store_read(
 	strcpy(p_value, buffer);
 
 	*pp_value = p_value;
+}
+
+void zob_store_delete(
+		struct zob_store * p_store,
+		const char * p_key,
+		bool * is_ok)
+{
+	DBT key;
+	memset(&key, 0, sizeof key);
+
+	key.size = 1u + strlen(p_key);
+	key.data = (void *) p_key;
+
+	int ret = p_store->p_dbh->del(p_store->p_dbh, NULL, &key, 0);
+	*is_ok = (ret == 0);
+
+	if(DB_NOTFOUND == ret)
+		return;
+
+	CHECK_BDB_INT(ret);
 }
