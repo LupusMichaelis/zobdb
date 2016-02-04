@@ -2,23 +2,18 @@
 #include "app.h"
 #include "object.h"
 
-struct db_observable
+struct zob_observable
 {
-	struct db_app * p_app;
-
-	db_observable_callback * p_callbacks;
+	zob_observable_callback * p_callbacks;
 };
-
 
 APP_ALLOC(observable)
 APP_CREATE(observable)
 //APP_CLONE(observable)
 APP_DISPOSE(observable)
 
-void db_observable_init(struct db_observable * p_observable, struct db_app * p_app)
+void zob_observable_init(struct zob_observable * p_observable)
 {
-	p_observable->p_app = p_app;
-
 	if(!p_observable->p_callbacks)
 	{
 		p_observable->p_callbacks = malloc(10 * sizeof *p_observable->p_callbacks);
@@ -26,15 +21,16 @@ void db_observable_init(struct db_observable * p_observable, struct db_app * p_a
 	}
 }
 
-void db_observable_clean(struct db_observable * p_observable)
+void zob_observable_clean(struct zob_observable * p_observable, bool has_to_dispose)
 {
-	if(p_observable->p_callbacks)
-		free(p_observable->p_callbacks);
+	if(has_to_dispose)
+		if(p_observable->p_callbacks)
+			free(p_observable->p_callbacks);
 }
 
-void db_observable_listen(struct db_observable * p_observable, db_observable_callback callback)
+void zob_observable_listen(struct zob_observable * p_observable, zob_observable_callback callback)
 {
-	db_observable_callback *p_callback = p_observable->p_callbacks;
+	zob_observable_callback *p_callback = p_observable->p_callbacks;
 
 	do if(p_callback && !*p_callback)
 	{
@@ -44,9 +40,9 @@ void db_observable_listen(struct db_observable * p_observable, db_observable_cal
 	while(++p_callback < p_observable->p_callbacks + 10);
 }
 
-void db_observable_notify(struct db_observable * p_observable, void * p_data)
+void zob_observable_notify(struct zob_observable * p_observable, void * p_data)
 {
-	db_observable_callback *p_callback = p_observable->p_callbacks;
+	zob_observable_callback *p_callback = p_observable->p_callbacks;
 
 	do if(p_callback && *p_callback)
 		(*p_callback)(p_observable, p_data);

@@ -1,23 +1,23 @@
-#ifndef H_DB_LOG // H_DB_LOG
-#	define H_DB_LOG // H_DB_LOG
+#ifndef H_ZOB_LOG // H_ZOB_LOG
+#	define H_ZOB_LOG // H_ZOB_LOG
 
 #	include <stdbool.h>
 
-struct db_log;
-struct db_app;
+struct zob_log;
+struct zob_app;
 
-void db_log_create(struct db_log ** pp_log);
-void db_log_init(struct db_log * p_log);
+void zob_log_create(struct zob_log ** pp_log);
+void zob_log_init(struct zob_log * p_log);
 
-void db_log_clone(struct db_log * p_log, struct db_log ** pp_log);
-void db_log_copy(struct db_log * p_from, struct db_log * p_to);
+void zob_log_clone(struct zob_log * p_log, struct zob_log ** pp_log);
+void zob_log_copy(struct zob_log * p_from, struct zob_log * p_to);
 
-void db_log_clean(struct db_log * p_log, bool has_to_dispose);
-void db_log_dispose(struct db_log ** pp_log);
+void zob_log_clean(struct zob_log * p_log, bool has_to_dispose);
+void zob_log_dispose(struct zob_log ** pp_log);
 
-void db_log_open(struct db_log * p_log, char * filename);
-void db_log_error(struct db_log * p_log, char * p_error, char * filename, int filenumber);
-void db_log_write(struct db_log * p_log, char * text, char * filename, int filenumber);
+void zob_log_open(struct zob_log * p_log, char * filename);
+void zob_log_error(struct zob_log * p_log, char * p_error, char * filename, int filenumber);
+void zob_log_write(struct zob_log * p_log, char * text, char * filename, int filenumber);
 
-#endif // H_DB_LOG
+#endif // H_ZOB_LOG
 

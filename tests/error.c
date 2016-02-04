@@ -21,15 +21,15 @@ int main(int argc, char *argv[])
 {
 	atexit(called_exit);
 
-	struct db_error * p_error = NULL;
-	db_error_alloc(&p_error);
-	db_error_init(p_error);
-	db_error_set_is_fatal(p_error, false);
+	struct zob_error * p_error = NULL;
+	zob_error_alloc(&p_error);
+	zob_error_init(p_error);
+	zob_error_set_is_fatal(p_error, false);
 
 	DB_ERROR_PRINTF(p_error, "%s", "This message should be a notice");
 	DB_ERROR_PRINTF(p_error, "%s", "This message should be displayed and app continued");
 
-	db_error_set_is_fatal(p_error, true);
+	zob_error_set_is_fatal(p_error, true);
 	should_ve_exited = true;
 	DB_ERROR_PRINTF(p_error, "%s", "This message should be displayed and app exited");
 	assert(0);

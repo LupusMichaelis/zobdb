@@ -33,17 +33,18 @@ TESTS= \
 	   tests/buffer \
 	   tests/string \
 
-.PHONY: db dbd test-data tests
+.PHONY: test-data tests
 
 OBJS=$(SRCS:.c=.o)
 
 TARGET= \
-		db \
-		dbd
+		zob \
+		zobd
 
 all: $(TESTS) $(TARGET)
 
-app: app.o $(OBJS)
+app: main.o $(OBJS)
+	$(CC) -o app $? $(CGLAGS) $(LDFLAGS)
 
 tests: $(TESTS)
 
@@ -53,4 +54,4 @@ $(TARGET): app
 	-ln -s ./app $@
 
 clean:
-	-$(RM) $(OBJS) app app.o $(TARGET) $(TARGET:=.o) $(TESTS) $(TESTS:=.o)
+	-$(RM) $(OBJS) app main.o $(TARGET) $(TARGET:=.o) $(TESTS) $(TESTS:=.o)

@@ -6,9 +6,9 @@
 #include <unistd.h>
 #include <fcntl.h>
 
-struct db_app;
+struct zob_app;
 
-struct db_log
+struct zob_log
 {
 	int log_fd;
 	FILE * p_log;
@@ -19,15 +19,15 @@ APP_CREATE(log)
 APP_CLONE(log)
 APP_DISPOSE(log)
 
-void db_log_init(struct db_log * p_log)
+void zob_log_init(struct zob_log * p_log)
 {
 	char * p_filename = NULL;
-	db_app_config_get(gp_app, "log.file", &p_filename);
+	zob_app_config_get(gp_app, "log.file", &p_filename);
 	CHECK_NULL(p_filename);
-	db_log_open(p_log, p_filename);
+	zob_log_open(p_log, p_filename);
 }
 
-void db_log_clean(struct db_log * p_log, bool has_to_dispose)
+void zob_log_clean(struct zob_log * p_log, bool has_to_dispose)
 {
 	if(p_log->p_log)
 		fclose(p_log->p_log);
@@ -38,7 +38,7 @@ void db_log_clean(struct db_log * p_log, bool has_to_dispose)
 	memset(p_log, 0, sizeof *p_log);
 }
 
-void db_log_copy(struct db_log * p_from, struct db_log * p_to)
+void zob_log_copy(struct zob_log * p_from, struct zob_log * p_to)
 {
 	p_to->log_fd = dup(p_from->log_fd);
 	CHECK_INT(p_to->log_fd);
@@ -46,7 +46,7 @@ void db_log_copy(struct db_log * p_from, struct db_log * p_to)
 	CHECK_NULL(p_to->p_log);
 }
 
-void db_log_open(struct db_log * p_log, char * filename)
+void zob_log_open(struct zob_log * p_log, char * filename)
 {
 	p_log->log_fd = open(filename, O_CREAT | O_APPEND | O_WRONLY, 0600);
 	CHECK_INT(p_log->log_fd);
@@ -54,15 +54,15 @@ void db_log_open(struct db_log * p_log, char * filename)
 	CHECK_NULL(p_log->p_log);
 }
 
-void db_log_write(struct db_log * p_log, char * text, char * filename, int filenumber)
+void zob_log_write(struct zob_log * p_log, char * text, char * filename, int filenumber)
 {
 	const char * p_name = NULL;
-	db_app_name_get_reference(gp_app, &p_name);
+	zob_app_name_get_reference(gp_app, &p_name);
 	fprintf(p_log->p_log, "%s: %s[%d] %s\n", p_name, filename, filenumber, text);
 	fflush(p_log->p_log);
 }
 
-void db_log_error(struct db_log * p_log, char * p_error, char * filename, int filenumber)
+void zob_log_error(struct zob_log * p_log, char * p_error, char * filename, int filenumber)
 {
 	FILE * log = NULL;
 
@@ -73,7 +73,7 @@ void db_log_error(struct db_log * p_log, char * p_error, char * filename, int fi
 		log = stderr;
 
 	const char * p_name = NULL;
-	db_app_name_get_reference(gp_app, &p_name);
+	zob_app_name_get_reference(gp_app, &p_name);
 	fprintf(log, "%s: %s[%d] %s\n", p_name, filename, filenumber, p_error);
 
 	exit(EXIT_FAILURE);

@@ -1,8 +1,8 @@
-#ifndef H_DB_BUFFER // H_DB_BUFFER
-#	define H_DB_BUFFER // H_DB_BUFFER
+#ifndef H_ZOB_BUFFER // H_ZOB_BUFFER
+#	define H_ZOB_BUFFER // H_ZOB_BUFFER
 
-struct db_buffer;
-struct db_app;
+struct zob_buffer;
+struct zob_app;
 
 #	define DB_B_AUTO_VAR 1 << 0
 #	define DB_B_FIXED_SIZE 1 << 1
@@ -10,25 +10,25 @@ struct db_app;
 #	include <stddef.h>
 #	include <stdbool.h>
 
-void db_buffer_create(struct db_buffer ** pp_buffer);
-void db_buffer_init(struct db_buffer * p_buffer);
+void zob_buffer_create(struct zob_buffer ** pp_buffer);
+void zob_buffer_init(struct zob_buffer * p_buffer);
 
-void db_buffer_set_is_auto(struct db_buffer * p_buffer, bool is_auto);
+void zob_buffer_set_is_auto(struct zob_buffer * p_buffer, bool is_auto);
 
-void db_buffer_get(struct db_buffer * p_buffer, char ** pp_text);
-void db_buffer_get_data(struct db_buffer * p_buffer, size_t first, size_t last, char ** p_string);
+void zob_buffer_get(struct zob_buffer * p_buffer, char ** pp_text);
+void zob_buffer_get_data(struct zob_buffer * p_buffer, size_t first, size_t last, char ** p_string);
 
-void db_buffer_clone(struct db_buffer * p_buffer, struct db_buffer ** pp_buffer);
-void db_buffer_copy(struct db_buffer * p_from, struct db_buffer * p_to);
+void zob_buffer_clone(struct zob_buffer * p_buffer, struct zob_buffer ** pp_buffer);
+void zob_buffer_copy(struct zob_buffer * p_from, struct zob_buffer * p_to);
 
-void db_buffer_clean(struct db_buffer * p_buffer, bool has_to_dispose);
-void db_buffer_dispose(struct db_buffer ** pp_buffer);
+void zob_buffer_clean(struct zob_buffer * p_buffer, bool has_to_dispose);
+void zob_buffer_dispose(struct zob_buffer ** pp_buffer);
 
-void db_buffer_ensure(struct db_buffer * p_buffer, size_t from, size_t input_size);
-void db_buffer_write(struct db_buffer * p_buffer, size_t * p_from, const char * p_text);
+void zob_buffer_ensure(struct zob_buffer * p_buffer, size_t from, size_t input_size);
+void zob_buffer_write(struct zob_buffer * p_buffer, size_t * p_from, const char * p_text);
 
-void db_buffer_find_char(
-		struct db_buffer * p_buffer,
+void zob_buffer_find_char(
+		struct zob_buffer * p_buffer,
 		char const needle,
 		size_t const first,
 		size_t const last,
@@ -36,8 +36,8 @@ void db_buffer_find_char(
 		bool * p_has_found
 		);
 
-void db_buffer_find_string(
-		struct db_buffer * p_buffer,
+void zob_buffer_find_string(
+		struct zob_buffer * p_buffer,
 		char const * p_needle,
 		size_t first,
 		size_t last,
@@ -45,6 +45,6 @@ void db_buffer_find_string(
 		bool * p_has_found
 		);
 
-void db_buffer_fill(struct db_buffer * p_buffer, size_t size, char value);
+void zob_buffer_fill(struct zob_buffer * p_buffer, size_t size, char value);
 
-#endif // H_DB_BUFFER
+#endif // H_ZOB_BUFFER

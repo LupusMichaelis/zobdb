@@ -1,35 +1,35 @@
-#ifndef H_DB_REQUEST_BUILDER
-#	define H_DB_REQUEST_BUILDER
+#ifndef H_ZOB_REQUEST_BUILDER
+#	define H_ZOB_REQUEST_BUILDER
 
 #	include "message.h"
 
 #	include <stdbool.h>
 
-struct db_app;
-struct db_request_builder;
+struct zob_app;
+struct zob_request_builder;
 
-void db_request_builder_alloc(struct db_request_builder ** pp_rb);
-void db_request_builder_create(struct db_request_builder ** pp_request_builderp);
-void db_request_builder_init(struct db_request_builder * p_request_builder);
-void db_request_builder_dispose(struct db_request_builder ** pp_rb);
-void db_request_builder_clean(struct db_request_builder * p_rb, bool has_to_dispose);
-void db_request_builder_copy(struct db_request_builder * p_orig, struct db_request_builder * p_dest);
+void zob_request_builder_alloc(struct zob_request_builder ** pp_rb);
+void zob_request_builder_create(struct zob_request_builder ** pp_request_builderp);
+void zob_request_builder_init(struct zob_request_builder * p_request_builder);
+void zob_request_builder_dispose(struct zob_request_builder ** pp_rb);
+void zob_request_builder_clean(struct zob_request_builder * p_rb, bool has_to_dispose);
+void zob_request_builder_copy(struct zob_request_builder * p_orig, struct zob_request_builder * p_dest);
 
-void db_request_builder_parse(
-		struct db_request_builder * p_builder,
+void zob_request_builder_parse(
+		struct zob_request_builder * p_builder,
 		const char * p_text,
 		bool * need_moar
 		);
 
-void db_request_builder_get_request(struct db_request_builder * p_request, struct db_message ** pp_message);
+void zob_request_builder_get_request(struct zob_request_builder * p_request, struct zob_message ** pp_message);
 
-void db_request_builder_is_bad_request(struct db_request_builder * p_rb, bool * is_bad_request);
+void zob_request_builder_is_bad_request(struct zob_request_builder * p_rb, bool * is_bad_request);
 
-void db_request_builder_find_verb(struct db_request_builder * p_rb);
-void db_request_builder_parse_new(struct db_request_builder * p_rb);
-void db_request_builder_parse_clone(struct db_request_builder * p_rb);
-void db_request_builder_parse_read(struct db_request_builder * p_rb);
-void db_request_builder_parse_delete(struct db_request_builder * p_rb);
-void db_request_builder_parse_update(struct db_request_builder * p_rb);
+void zob_request_builder_find_verb(struct zob_request_builder * p_rb);
+void zob_request_builder_parse_new(struct zob_request_builder * p_rb);
+void zob_request_builder_parse_clone(struct zob_request_builder * p_rb);
+void zob_request_builder_parse_read(struct zob_request_builder * p_rb);
+void zob_request_builder_parse_delete(struct zob_request_builder * p_rb);
+void zob_request_builder_parse_update(struct zob_request_builder * p_rb);
 
-#endif // H_DB_REQUEST_BUILDER
+#endif // H_ZOB_REQUEST_BUILDER

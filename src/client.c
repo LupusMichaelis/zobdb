@@ -9,7 +9,7 @@
 #include "app.h"
 #include "object.h"
 
-struct db_client
+struct zob_client
 {
 	char buffer[DB_BUFFER_SIZE];
 
@@ -23,13 +23,13 @@ struct db_client
 APP_ALLOC(client)
 APP_CREATE(client)
 
-void db_client_init(struct db_client * p_client)
+void zob_client_init(struct zob_client * p_client)
 {
 	p_client->remote_addr_size = sizeof p_client->remote_addr;
 	p_client->remote_addr.sun_family = AF_UNIX;
 }
 
-void db_client_clean(struct db_client * p_client, bool has_to_dispose)
+void zob_client_clean(struct zob_client * p_client, bool has_to_dispose)
 {
 	if(has_to_dispose)
 		if(p_client->socket_fd > 0)
@@ -38,19 +38,19 @@ void db_client_clean(struct db_client * p_client, bool has_to_dispose)
 	memset(p_client, 0, sizeof *p_client);
 }
 
-int db_client_run(struct db_client * p_client)
+int zob_client_run(struct zob_client * p_client)
 {
 	char * p_sock_name = NULL;
-	db_app_config_get(gp_app, "socket.name", &p_sock_name);
+	zob_app_config_get(gp_app, "socket.name", &p_sock_name);
 
-	db_client_connect(p_client, p_sock_name);
-	db_client_send(p_client, fileno(stdin));
-	do db_client_recv(p_client); while(p_client->wait_moar);
+	zob_client_connect(p_client, p_sock_name);
+	zob_client_send(p_client, fileno(stdin));
+	do zob_client_recv(p_client); while(p_client->wait_moar);
 
 	return EXIT_SUCCESS;
 }
 
-void db_client_connect(struct db_client * p_client, char const * sockname)
+void zob_client_connect(struct zob_client * p_client, char const * sockname)
 {
 	strcpy(p_client->remote_addr.sun_path, sockname);
 
@@ -61,7 +61,7 @@ void db_client_connect(struct db_client * p_client, char const * sockname)
 				, (struct sockaddr *) &p_client->remote_addr, sizeof p_client->remote_addr));
 }
 
-void db_client_send(struct db_client * p_client, int in_fd)
+void zob_client_send(struct zob_client * p_client, int in_fd)
 {
 	int reading_count = read(in_fd, &p_client->buffer, DB_BUFFER_SIZE);
 	CHECK_INT(reading_count);
@@ -73,15 +73,15 @@ void db_client_send(struct db_client * p_client, int in_fd)
 	CHECK_INT(writting_count);
 
 	if(reading_count != writting_count)
-		db_app_error(gp_app, "IO mismatch", __FILE__, __LINE__);
+		zob_app_error(gp_app, "IO mismatch", __FILE__, __LINE__);
 }
 
-void db_client_recv(struct db_client * p_client)
+void zob_client_recv(struct zob_client * p_client)
 {
 	int reading_count = read(p_client->socket_fd, &p_client->buffer, DB_BUFFER_SIZE);
 	CHECK_INT(reading_count);
 	p_client->buffer[reading_count] = '\0';
 	printf("%s\n", p_client->buffer);
 	if(p_client->buffer != strstr(p_client->buffer, "Ok"))
-		db_app_error(gp_app, "No ack", __FILE__, __LINE__);
+		zob_app_error(gp_app, "No ack", __FILE__, __LINE__);
 }

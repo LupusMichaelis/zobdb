@@ -1,29 +1,29 @@
-#ifndef H_DB_STORE
-#	define H_DB_STORE
+#ifndef H_ZOB_STORE
+#	define H_ZOB_STORE
 
-struct db_app;
-struct db_store;
+struct zob_app;
+struct zob_store;
 
 #	include <stdbool.h>
 
-void db_store_alloc(struct db_store ** pp_store);
-void db_store_create(struct db_store ** pp_store);
-void db_store_init(struct db_store * p_store);
-void db_store_clone(struct db_store * p_store, struct db_store ** pp_store);
-void db_store_copy(struct db_store * p_from, struct db_store * p_to);
-void db_store_clean(struct db_store * p_store, bool has_to_dispose) ;
-void db_store_dispose(struct db_store ** pp_store);
+void zob_store_alloc(struct zob_store ** pp_store);
+void zob_store_create(struct zob_store ** pp_store);
+void zob_store_init(struct zob_store * p_store);
+void zob_store_clone(struct zob_store * p_store, struct zob_store ** pp_store);
+void zob_store_copy(struct zob_store * p_from, struct zob_store * p_to);
+void zob_store_clean(struct zob_store * p_store, bool has_to_dispose) ;
+void zob_store_dispose(struct zob_store ** pp_store);
 
-void db_store_open(struct db_store * p_store, const char * filename);
-void db_store_read(
-		struct db_store * p_store,
+void zob_store_open(struct zob_store * p_store, const char * filename);
+void zob_store_read(
+		struct zob_store * p_store,
 		const char * p_key,
 		char ** pp_value,
 		bool * is_ok);
-void db_store_write(
-		struct db_store * p_store,
+void zob_store_write(
+		struct zob_store * p_store,
 		const char * p_key,
 		const char * p_value,
 		bool * p_is_ok);
 
-#endif // H_DB_STORE
+#endif // H_ZOB_STORE

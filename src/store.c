@@ -6,14 +6,14 @@
 #include <unistd.h>
 #include <db.h>
 
-struct db_store
+struct zob_store
 {
 	DB * p_dbh;
 };
 
 #	define CHECK_BDB_INT(int_val)\
 		if((int_val) < 0) \
-			db_app_error(gp_app, db_strerror(int_val), __FILE__, __LINE__);
+			zob_app_error(gp_app, db_strerror(int_val), __FILE__, __LINE__);
 
 
 APP_ALLOC(store)
@@ -21,12 +21,12 @@ APP_CREATE(store)
 APP_DISPOSE(store)
 APP_CLONE(store)
 
-void db_store_init(struct db_store * p_store)
+void zob_store_init(struct zob_store * p_store)
 {
 	const char * filename = NULL;
 	int ret = 0;
 
-	db_app_config_get(gp_app, "store", (char **)&filename);
+	zob_app_config_get(gp_app, "store", (char **)&filename);
 	ret = db_create(&p_store->p_dbh, NULL, 0);
 	CHECK_BDB_INT(ret);
 
@@ -34,12 +34,12 @@ void db_store_init(struct db_store * p_store)
 	CHECK_BDB_INT(ret);
 }
 
-void db_store_copy(struct db_store * p_from, struct db_store * p_to)
+void zob_store_copy(struct zob_store * p_from, struct zob_store * p_to)
 {
-	db_app_error(gp_app, "Not implemented", __FILE__, __LINE__);
+	zob_app_error(gp_app, "Not implemented", __FILE__, __LINE__);
 }
 
-void db_store_clean(struct db_store * p_store, bool has_to_dispose)
+void zob_store_clean(struct zob_store * p_store, bool has_to_dispose)
 {
 	if(has_to_dispose)
 		if(p_store->p_dbh)
@@ -48,8 +48,8 @@ void db_store_clean(struct db_store * p_store, bool has_to_dispose)
 	memset(p_store, 0, sizeof *p_store);
 }
 
-void db_store_write(
-		struct db_store * p_store,
+void zob_store_write(
+		struct zob_store * p_store,
 		const char * p_key,
 		const char * p_value,
 		bool * is_ok)
@@ -72,10 +72,10 @@ void db_store_write(
 	*is_ok = (ret == 0);
 }
 
-void db_store_read(
-		struct db_store * p_store,
+void zob_store_read(
+		struct zob_store * p_store,
 		const char * p_key,
-		char ** pp_value, // XXX db_string
+		char ** pp_value, // XXX zob_string
 		bool * is_ok)
 {
 	DBT key, data;

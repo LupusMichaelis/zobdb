@@ -7,11 +7,11 @@
 #include <stdlib.h>
 #include <assert.h>
 
-struct db_app;
+struct zob_app;
 
-struct db_buffer
+struct zob_buffer
 {
-	struct db_app * p_app;
+	struct zob_app * p_app;
 
 	// On demand, the buffer will be extended of chunck_size elements
 	size_t chunk_size;
@@ -24,9 +24,9 @@ struct db_buffer
 	char * p_end;
 };
 
-void _db_buffer_error(struct db_buffer * p_buffer, char * p_message, char * p_file, int line)
+void _zob_buffer_error(struct zob_buffer * p_buffer, char * p_message, char * p_file, int line)
 {
-	db_app_error(p_buffer->p_app, p_message, p_file, line);
+	zob_app_error(p_buffer->p_app, p_message, p_file, line);
 }
 
 APP_ALLOC(buffer)
@@ -34,13 +34,13 @@ APP_CREATE(buffer)
 APP_CLONE(buffer)
 APP_DISPOSE(buffer)
 
-void db_buffer_init(struct db_buffer * p_buffer)
+void zob_buffer_init(struct zob_buffer * p_buffer)
 {
 	p_buffer->chunk_size = 1024;
 	p_buffer->is_auto = false;
 }
 
-void db_buffer_clean(struct db_buffer * p_buffer, bool has_to_dispose)
+void zob_buffer_clean(struct zob_buffer * p_buffer, bool has_to_dispose)
 {
 	if(has_to_dispose)
 		if(NULL != p_buffer->p_begin)
@@ -49,7 +49,7 @@ void db_buffer_clean(struct db_buffer * p_buffer, bool has_to_dispose)
 	memset(p_buffer, 0, sizeof *p_buffer);
 }
 
-void db_buffer_copy(struct db_buffer * p_from, struct db_buffer * p_to)
+void zob_buffer_copy(struct zob_buffer * p_from, struct zob_buffer * p_to)
 {
 	p_to->p_app = p_from->p_app;
 	p_to->chunk_size = p_from->chunk_size;
@@ -58,14 +58,14 @@ void db_buffer_copy(struct db_buffer * p_from, struct db_buffer * p_to)
 	strncpy(p_to->p_begin, p_from->p_begin, p_from->p_end - p_from->p_begin);
 }
 
-void db_buffer_set_is_auto(struct db_buffer * p_buffer, bool is_auto)
+void zob_buffer_set_is_auto(struct zob_buffer * p_buffer, bool is_auto)
 {
 	p_buffer->is_auto = is_auto;
 }
 
 // Ensure we have enough room to write input_size elements from the from position and
 // apply a linear grow algorithm, and fail if we can't grow.
-void db_buffer_ensure(struct db_buffer * p_buffer, size_t from, size_t input_size)
+void zob_buffer_ensure(struct zob_buffer * p_buffer, size_t from, size_t input_size)
 {
 	int available_size = 0;
 	if(p_buffer->p_end > p_buffer->p_begin)
@@ -76,7 +76,7 @@ void db_buffer_ensure(struct db_buffer * p_buffer, size_t from, size_t input_siz
 
 	if(!p_buffer->is_auto)
 	{
-		_db_buffer_error(p_buffer, "Attempt to resize a fixed size buffer", __FILE__, __LINE__);
+		_zob_buffer_error(p_buffer, "Attempt to resize a fixed size buffer", __FILE__, __LINE__);
 		return;
 	}
 
@@ -109,24 +109,24 @@ void db_buffer_ensure(struct db_buffer * p_buffer, size_t from, size_t input_siz
 	p_buffer->p_end += chunk_number * p_buffer->chunk_size;
 }
 
-void db_buffer_write(struct db_buffer * p_buffer, size_t * p_from, const char * p_text)
+void zob_buffer_write(struct zob_buffer * p_buffer, size_t * p_from, const char * p_text)
 {
 	int length = strlen(p_text);
 
-	if(!length) db_app_error(p_buffer->p_app, "Empty write", __FILE__, __LINE__);
+	if(!length) zob_app_error(p_buffer->p_app, "Empty write", __FILE__, __LINE__);
 
-	db_buffer_ensure(p_buffer, *p_from, length);
+	zob_buffer_ensure(p_buffer, *p_from, length);
 	strcpy(p_buffer->p_begin + *p_from, p_text);
 	if(p_from)
 		*p_from += length;
 }
 
-void db_buffer_get(struct db_buffer * p_buffer, char ** pp_text)
+void zob_buffer_get(struct zob_buffer * p_buffer, char ** pp_text)
 {
 	*pp_text = p_buffer->p_begin;
 }
 
-void db_buffer_get_data(struct db_buffer * p_buffer, size_t first, size_t last, char ** pp_string)
+void zob_buffer_get_data(struct zob_buffer * p_buffer, size_t first, size_t last, char ** pp_string)
 {
 	assert(last > first);
 
@@ -138,13 +138,13 @@ void db_buffer_get_data(struct db_buffer * p_buffer, size_t first, size_t last, 
 	*pp_string = p_string;
 }
 
-void db_buffer_size(struct db_buffer * p_buffer, size_t * p_size)
+void zob_buffer_size(struct zob_buffer * p_buffer, size_t * p_size)
 {
 	*p_size = p_buffer->p_end - p_buffer->p_begin;
 }
 
-void db_buffer_find_char(
-		struct db_buffer * p_buffer,
+void zob_buffer_find_char(
+		struct zob_buffer * p_buffer,
 		char needle,
 		size_t first,
 		size_t last,
@@ -170,8 +170,8 @@ void db_buffer_find_char(
 	while(++*p_position);
 }
 
-void db_buffer_find_string(
-		struct db_buffer * p_buffer,
+void zob_buffer_find_string(
+		struct zob_buffer * p_buffer,
 		char const * p_needle,
 		size_t first,
 		size_t last,
@@ -182,7 +182,7 @@ void db_buffer_find_string(
 	*p_position = first;
 
 	size_t size = 0;
-	db_buffer_size(p_buffer, &size);
+	zob_buffer_size(p_buffer, &size);
 
 	size_t needle_size = strlen(p_needle);
 	if(0 == needle_size || needle_size > size)
@@ -229,9 +229,9 @@ void db_buffer_find_string(
 	while(++*p_position);
 }
 
-void db_buffer_fill(struct db_buffer * p_buffer, size_t size, char value)
+void zob_buffer_fill(struct zob_buffer * p_buffer, size_t size, char value)
 {
-	db_buffer_ensure(p_buffer, 0, size);
+	zob_buffer_ensure(p_buffer, 0, size);
 	memset(p_buffer->p_begin, value, size);
 }
 

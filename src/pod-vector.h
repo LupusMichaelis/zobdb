@@ -1,5 +1,5 @@
-#ifndef H_DB_POD_VECTOR
-#	define H_DB_POD_VECTOR
+#ifndef H_ZOB_POD_VECTOR
+#	define H_ZOB_POD_VECTOR
 
 #	include "allocator.h"
 
@@ -88,4 +88,4 @@ void pod_name##_vector_copy(pod_type ** pp_from, pod_type ** pp_to)							\
 	while(*++pp_from && *++pp_to);															\
 }																							\
 
-#endif// H_DB_POD_VECTOR
+#endif// H_ZOB_POD_VECTOR

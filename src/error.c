@@ -10,13 +10,13 @@
 
 #include <stdbool.h>
 
-struct db_error
+struct zob_error
 {
 	bool is_fatal;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
-static bool _db_error_make_format(char ** pp_full_fmt, char const * p_file, int const line, char const * p_fmt)
+static bool _zob_error_make_format(char ** pp_full_fmt, char const * p_file, int const line, char const * p_fmt)
 {
 	size_t fmt_size = FMT_SIZE;
 	size_t written = 0;
@@ -49,10 +49,10 @@ static bool _db_error_make_format(char ** pp_full_fmt, char const * p_file, int 
 	return true;
 }
 
-static void _db_error_printf(struct db_error * p_error, char const * p_file, int const line, char const * p_fmt, va_list ap)
+static void _zob_error_printf(struct zob_error * p_error, char const * p_file, int const line, char const * p_fmt, va_list ap)
 {
 	char * p_full_fmt = NULL;
-	if(!_db_error_make_format(&p_full_fmt, p_file, line, p_fmt))
+	if(!_zob_error_make_format(&p_full_fmt, p_file, line, p_fmt))
 		exit(EXIT_FAILURE);
 
 	// Lets atomically print the error message
@@ -67,9 +67,9 @@ static void _db_error_printf(struct db_error * p_error, char const * p_file, int
 
 
 ////////////////////////////////////////////////////////////////////////////////
-void db_error_alloc(struct db_error ** pp_error)
+void zob_error_alloc(struct zob_error ** pp_error)
 {
-	struct db_error * p = NULL;
+	struct zob_error * p = NULL;
 	p = calloc(1, sizeof *p);
 	if(NULL == p)
 	{
@@ -79,25 +79,25 @@ void db_error_alloc(struct db_error ** pp_error)
 	*pp_error = p;
 }
 
-void db_error_printf(struct db_error * p_error, char const * p_file, int const line, char const * p_fmt, ...)
+void zob_error_printf(struct zob_error * p_error, char const * p_file, int const line, char const * p_fmt, ...)
 {
 	va_list ap;
 	va_start(ap, p_fmt);
-	_db_error_printf(p_error, p_file, line, p_fmt, ap);
+	_zob_error_printf(p_error, p_file, line, p_fmt, ap);
 	va_end(ap);
 }
 
-void db_error_init(struct db_error * p_error)
+void zob_error_init(struct zob_error * p_error)
 {
 	p_error->is_fatal = true;
 }
 
-void db_error_set_is_fatal(struct db_error * p_error, bool is_fatal)
+void zob_error_set_is_fatal(struct zob_error * p_error, bool is_fatal)
 {
 	p_error->is_fatal = is_fatal;
 }
 
-void db_error_is_fatal(struct db_error * p_error, bool * p_is_fatal)
+void zob_error_is_fatal(struct zob_error * p_error, bool * p_is_fatal)
 {
 	*p_is_fatal = p_error->is_fatal;
 }
