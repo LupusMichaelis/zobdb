@@ -3,14 +3,17 @@
 #include "object.h"
 
 #include <stdlib.h>
-#include <fcntl.h>
 #include <unistd.h>
+#include <db.h>
 
 struct db_store
 {
-	struct db_app * p_app;
-	int fd;
+	DB * p_dbh;
 };
+
+#	define CHECK_BDB_INT(int_val)\
+		if((int_val) < 0) \
+			db_app_error(gp_app, db_strerror(int_val), __FILE__, __LINE__);
 
 
 APP_ALLOC(store)
@@ -18,65 +21,90 @@ APP_CREATE(store)
 APP_DISPOSE(store)
 APP_CLONE(store)
 
-void db_store_init(struct db_store * p_store, struct db_app * p_app)
+void db_store_init(struct db_store * p_store)
 {
-	p_store->p_app = p_app;
-
 	const char * filename = NULL;
-	db_app_config_get(p_store->p_app, "store", (char **)&filename);
-	p_store->fd = open(filename, 0600 | O_APPEND | O_WRONLY);
+	int ret = 0;
 
-	CHECK_INT(p_store->p_app, p_store->fd);
+	db_app_config_get(gp_app, "store", (char **)&filename);
+	ret = db_create(&p_store->p_dbh, NULL, 0);
+	CHECK_BDB_INT(ret);
+
+	ret = p_store->p_dbh->open(p_store->p_dbh, NULL, filename, NULL, DB_BTREE, DB_CREATE, 0);
+	CHECK_BDB_INT(ret);
 }
 
-void db_store_generate_ticket(struct db_store * p_store, char ** pp_ticket)
+void db_store_copy(struct db_store * p_from, struct db_store * p_to)
 {
-	// TODO a unique id ::= pid | ' ' | sequence-number
-	(void) p_store;
-	*pp_ticket = "1234";
+	db_app_error(gp_app, "Not implemented", __FILE__, __LINE__);
 }
 
-static void do_write(struct db_store * p_store, const char * p_text)
+void db_store_clean(struct db_store * p_store, bool has_to_dispose)
 {
-	int writting_count = write(p_store->fd, p_text, strlen(p_text));
-	CHECK_INT(p_store->p_app, writting_count);
-	if(strlen(p_text) != writting_count)
-		db_app_error(p_store->p_app, "IO mismatch", __FILE__, __LINE__);
+	if(has_to_dispose)
+		if(p_store->p_dbh)
+			p_store->p_dbh->close(p_store->p_dbh, 0);
 
+	memset(p_store, 0, sizeof *p_store);
 }
 
 void db_store_write(
 		struct db_store * p_store,
 		const char * p_key,
 		const char * p_value,
-		char ** pp_ticket,
 		bool * is_ok)
 {
-	char * p_ticket = NULL;
-	db_store_generate_ticket(p_store, &p_ticket);
+	DBT key, data;
+	memset(&key, 0, sizeof key);
+	memset(&data, 0, sizeof data);
 
-	do_write(p_store, p_key);
-	do_write(p_store, " ");
-	do_write(p_store, p_ticket);
-	do_write(p_store, "\n");
-	do_write(p_store, p_value);
-	do_write(p_store, "\n\n");
+	key.size = strlen(p_key) + 1;
+	key.data = (void *) p_key;
 
-	*pp_ticket = p_ticket;
-	*is_ok = true;
+	data.size = strlen(p_value) + 1;
+	data.data = (void *) p_value;
+
+	int ret = p_store->p_dbh->put(p_store->p_dbh, NULL, &key, &data, DB_NOOVERWRITE);
+	CHECK_BDB_INT(ret);
+
+	p_store->p_dbh->sync(p_store->p_dbh, 0);
+
+	*is_ok = (ret == 0);
 }
 
-void db_store_copy(struct db_store * p_from, struct db_store * p_to)
+void db_store_read(
+		struct db_store * p_store,
+		const char * p_key,
+		char ** pp_value, // XXX db_string
+		bool * is_ok)
 {
-	db_app_error(p_from->p_app, "Not implemented", __FILE__, __LINE__);
+	DBT key, data;
+	char buffer[1024];
+
+	*pp_value = NULL;
+
+	memset(&key, 0, sizeof key);
+	memset(&data, 0, sizeof data);
+	memset(buffer, 0, sizeof buffer / sizeof buffer[0]);
+
+	key.size = 1u + strlen(p_key);
+	key.data = (void *) p_key;
+
+	data.ulen = sizeof buffer;
+	data.data = buffer;
+	data.flags = DB_DBT_USERMEM;
+
+	int ret = p_store->p_dbh->get(p_store->p_dbh, NULL, &key, &data, 0);
+	*is_ok = (ret == 0);
+
+	if(DB_NOTFOUND == ret)
+		return;
+
+	CHECK_BDB_INT(ret);
+
+	char * p_value = malloc(strlen(buffer) + 1);
+	CHECK_NULL(p_value);
+	strcpy(p_value, buffer);
+
+	*pp_value = p_value;
 }
-
-void db_store_clean(struct db_store * p_store, bool has_to_dispose)
-{
-	if(has_to_dispose)
-		if(p_store->fd)
-			close(p_store->fd);
-
-	memset(p_store, 0, sizeof *p_store);
-}
-

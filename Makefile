@@ -9,22 +9,25 @@ LDFLAGS= \
 
 SRCS= \
 	  src/error.c \
-
-# \
-	  src/config.c \
-	  src/string.c \
-	  src/buffer.c \
-	  src/log.c \
-	  src/store.c \
+	  src/allocator.c \
 	  src/app.c \
-	  src/server.c \
+	  src/buffer.c \
+	  src/string.c \
+	  src/config.c \
+	  src/log.c \
 	  src/client.c \
-	  src/message.c \
+	  src/server.c \
+	  src/store.c \
 	  src/request-builder.c \
+	  src/message.c \
+# \
 	  src/observable.c \
 
 TESTS= \
 	   tests/error \
+	   tests/allocator \
+
+# \
 	   tests/vector \
 	   tests/observable \
 	   tests/buffer \

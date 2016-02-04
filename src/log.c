@@ -10,8 +10,6 @@ struct db_app;
 
 struct db_log
 {
-	struct db_app * p_app;
-
 	int log_fd;
 	FILE * p_log;
 };
@@ -21,13 +19,11 @@ APP_CREATE(log)
 APP_CLONE(log)
 APP_DISPOSE(log)
 
-void db_log_init(struct db_log * p_log, struct db_app * p_app)
+void db_log_init(struct db_log * p_log)
 {
-	p_log->p_app = p_app;
-
 	char * p_filename = NULL;
-	db_app_config_get(p_app, "log.file", &p_filename);
-	CHECK_NULL(p_app, p_filename);
+	db_app_config_get(gp_app, "log.file", &p_filename);
+	CHECK_NULL(p_filename);
 	db_log_open(p_log, p_filename);
 }
 
@@ -44,25 +40,24 @@ void db_log_clean(struct db_log * p_log, bool has_to_dispose)
 
 void db_log_copy(struct db_log * p_from, struct db_log * p_to)
 {
-	p_to->p_app = p_from->p_app;
 	p_to->log_fd = dup(p_from->log_fd);
-	CHECK_INT(p_to->p_app, p_to->log_fd);
+	CHECK_INT(p_to->log_fd);
 	p_to->p_log = fdopen(p_to->log_fd, "a");
-	CHECK_NULL(p_to->p_app, p_to->p_log);
+	CHECK_NULL(p_to->p_log);
 }
 
 void db_log_open(struct db_log * p_log, char * filename)
 {
 	p_log->log_fd = open(filename, O_CREAT | O_APPEND | O_WRONLY, 0600);
-	CHECK_INT(p_log->p_app, p_log->log_fd);
+	CHECK_INT(p_log->log_fd);
 	p_log->p_log = fdopen(p_log->log_fd, "a");
-	CHECK_NULL(p_log->p_app, p_log->p_log);
+	CHECK_NULL(p_log->p_log);
 }
 
 void db_log_write(struct db_log * p_log, char * text, char * filename, int filenumber)
 {
 	const char * p_name = NULL;
-	db_app_name_get_reference(p_log->p_app, &p_name);
+	db_app_name_get_reference(gp_app, &p_name);
 	fprintf(p_log->p_log, "%s: %s[%d] %s\n", p_name, filename, filenumber, text);
 	fflush(p_log->p_log);
 }
@@ -78,7 +73,7 @@ void db_log_error(struct db_log * p_log, char * p_error, char * filename, int fi
 		log = stderr;
 
 	const char * p_name = NULL;
-	db_app_name_get_reference(p_log->p_app, &p_name);
+	db_app_name_get_reference(gp_app, &p_name);
 	fprintf(log, "%s: %s[%d] %s\n", p_name, filename, filenumber, p_error);
 
 	exit(EXIT_FAILURE);

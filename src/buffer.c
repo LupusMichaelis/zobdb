@@ -34,11 +34,10 @@ APP_CREATE(buffer)
 APP_CLONE(buffer)
 APP_DISPOSE(buffer)
 
-void db_buffer_init(struct db_buffer * p_buffer, struct db_app * p_app)
+void db_buffer_init(struct db_buffer * p_buffer)
 {
 	p_buffer->chunk_size = 1024;
 	p_buffer->is_auto = false;
-	p_buffer->p_app = p_app;
 }
 
 void db_buffer_clean(struct db_buffer * p_buffer, bool has_to_dispose)
@@ -102,7 +101,7 @@ void db_buffer_ensure(struct db_buffer * p_buffer, size_t from, size_t input_siz
 	{
 		p_buffer->p_begin = realloc(p_buffer->p_begin, new_size * sizeof *p_buffer->p_begin);
 	}
-	CHECK_NULL(p_buffer->p_app, p_buffer->p_begin);
+	CHECK_NULL(p_buffer->p_begin);
 
 	if(p_buffer->p_end == NULL)
 		p_buffer->p_end = p_buffer->p_begin;
@@ -132,7 +131,7 @@ void db_buffer_get_data(struct db_buffer * p_buffer, size_t first, size_t last, 
 	assert(last > first);
 
 	char * p_string = calloc(1 + last - first, sizeof *p_string);
-	CHECK_NULL(p_buffer->p_app, p_string);
+	CHECK_NULL(p_string);
 
 	strncpy(p_string, p_buffer->p_begin + first, last - first);
 

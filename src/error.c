@@ -27,15 +27,15 @@ static bool _db_error_make_format(char ** pp_full_fmt, char const * p_file, int 
 		*pp_full_fmt = realloc(*pp_full_fmt, fmt_size);
 		if(NULL == *pp_full_fmt)
 		{
-			fprintf(stderr, FILE_LINE_FMT "%m", p_file, line);
+			fprintf(stderr, FILE_LINE_FMT "%m\n", p_file, line);
 			return false;
 		}
 
-		written = snprintf(*pp_full_fmt, fmt_size, FILE_LINE_FMT " %s", p_file, line, p_fmt);
+		written = snprintf(*pp_full_fmt, fmt_size, FILE_LINE_FMT " %s\n", p_file, line, p_fmt);
 
 		if(written < 0)
 		{
-			fprintf(stderr, FILE_LINE_FMT "%m", p_file, line);
+			fprintf(stderr, FILE_LINE_FMT "%m\n", p_file, line);
 			return false;
 		}
 
@@ -73,7 +73,7 @@ void db_error_alloc(struct db_error ** pp_error)
 	p = calloc(1, sizeof *p);
 	if(NULL == p)
 	{
-		fprintf(stderr, FILE_LINE_FMT " %m", __FILE__, __LINE__);
+		fprintf(stderr, FILE_LINE_FMT " %m\n", __FILE__, __LINE__);
 		exit(EXIT_FAILURE);
 	}
 	*pp_error = p;

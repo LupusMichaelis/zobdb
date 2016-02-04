@@ -10,8 +10,8 @@ struct db_app;
 #	include <stddef.h>
 #	include <stdbool.h>
 
-void db_buffer_create(struct db_buffer ** pp_buffer, struct db_app * p_app);
-void db_buffer_init(struct db_buffer * p_buffer, struct db_app * p_app);
+void db_buffer_create(struct db_buffer ** pp_buffer);
+void db_buffer_init(struct db_buffer * p_buffer);
 
 void db_buffer_set_is_auto(struct db_buffer * p_buffer, bool is_auto);
 

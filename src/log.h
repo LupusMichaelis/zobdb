@@ -6,8 +6,8 @@
 struct db_log;
 struct db_app;
 
-void db_log_create(struct db_log ** pp_log, struct db_app * p_app);
-void db_log_init(struct db_log * p_log, struct db_app * p_app);
+void db_log_create(struct db_log ** pp_log);
+void db_log_init(struct db_log * p_log);
 
 void db_log_clone(struct db_log * p_log, struct db_log ** pp_log);
 void db_log_copy(struct db_log * p_from, struct db_log * p_to);

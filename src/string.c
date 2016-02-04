@@ -12,24 +12,32 @@ struct db_app;
 
 struct db_string
 {
-	struct db_app * p_app;
 	struct db_buffer * p_buffer;
 };
 
 APP_VECTOR_ALLOC(string)
 APP_VECTOR_CREATE(string)
 APP_VECTOR_CLONE(string)
+APP_VECTOR_COPY(string)
 APP_VECTOR_DISPOSE(string)
+APP_VECTOR_CLEAN(string)
+
+void db_vector_string_copy(struct db_string ** p_from, struct db_string ** p_to)
+{
+	do
+	{
+		db_string_copy(*p_from, *p_to);
+	} while(++p_from && ++p_to);
+}
 
 APP_ALLOC(string)
 APP_CREATE(string)
 APP_CLONE(string)
 APP_DISPOSE(string)
 
-void db_string_init(struct db_string * p_string, struct db_app * p_app)
+void db_string_init(struct db_string * p_string)
 {
-	p_string->p_app = p_app;
-	db_buffer_create(&p_string->p_buffer, p_app);
+	db_buffer_create(&p_string->p_buffer);
 	db_buffer_set_is_auto(p_string->p_buffer, true);
 }
 
@@ -44,7 +52,6 @@ void db_string_clean(struct db_string * p_string, bool has_to_dispose)
 
 void db_string_copy(struct db_string * p_from, struct db_string * p_to)
 {
-	p_to->p_app = p_from->p_app;
 	db_buffer_copy(p_from->p_buffer, p_to->p_buffer);
 }
 

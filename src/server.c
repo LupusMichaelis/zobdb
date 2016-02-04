@@ -23,8 +23,9 @@ struct db_store;
 
 struct db_server
 {
-	struct db_app * p_app;
 	char buffer[DB_BUFFER_SIZE];
+
+	bool is_running;
 
 	int socket_fd;
 	int session_fd;
@@ -39,9 +40,9 @@ struct db_server
 APP_ALLOC(server)
 APP_CREATE(server)
 
-void db_server_init(struct db_server * p_server, struct db_app * p_app)
+void db_server_init(struct db_server * p_server)
 {
-	p_server->p_app = p_app;
+	p_server->is_running = true;
 
 	p_server->remote_addr_size = sizeof p_server->remote_addr;
 	p_server->session_fd = -1;
@@ -61,17 +62,17 @@ void db_server_clean(struct db_server * p_server, bool has_to_dispose)
 
 int db_server_run(struct db_server * p_server)
 {
-	daemon(1, 0);
+	//daemon(1, 0);
 
 	char * p_sock_name = NULL;
-	db_app_config_get(p_server->p_app, "socket.name", &p_sock_name);
+	db_app_config_get(gp_app, "socket.name", &p_sock_name);
 
-	db_store_create(&p_server->p_store, p_server->p_app);
+	db_store_create(&p_server->p_store);
 	db_server_listen(p_server, p_sock_name);
 	do
 	{
 		struct db_request_builder * p_rb = NULL;
-		db_request_builder_create(&p_rb, p_server->p_app);
+		db_request_builder_create(&p_rb);
 
 		db_server_session_begin(p_server);
 
@@ -94,6 +95,9 @@ int db_server_run(struct db_server * p_server)
 		struct db_message * p_answer = NULL;
 		if(is_parse_error)
 		{
+			db_message_create(&p_answer);
+			db_message_set_verb(p_answer, "KO");
+			db_message_set_payload(p_answer, "Parse error");
 			db_server_answer(p_server, p_answer);
 		}
 		else
@@ -112,9 +116,11 @@ int db_server_run(struct db_server * p_server)
 		db_request_builder_dispose(&p_rb);
 		db_server_session_end(p_server);
 	}
-	while(true);
+	while(p_server->is_running);
 
 	db_store_dispose(&p_server->p_store);
+
+	return EXIT_SUCCESS;
 }
 
 void db_server_process(struct db_server * p_server, struct db_message * p_request, struct db_message * p_answer)
@@ -126,40 +132,40 @@ void db_server_process(struct db_server * p_server, struct db_message * p_reques
 
 	if(0 == strcmp("read", p_verb))
 	{
-		/*
 		bool has_found = false;
-		db_store_read(p_server->fd, p_key, &p_payload, &has_found);
-		if(!has_found)
-		{
-			goto end;
-		}
-
-		db_message_set_payload(p_answer, p_payload);
-		*/
-
-		db_message_set_payload(p_answer, "Ko\nNot implemented");
-	}
-	else if(0 == strcmp("new", p_verb))
-	{
-		char * p_ticket = NULL;
-		bool is_ok = false;
-
-		db_message_get_payload(p_request, &p_payload);
-		db_store_write(p_server->p_store, p_key, p_payload, &p_ticket, &is_ok);
-		free(p_payload);
-
-		db_app_log(p_server->p_app, "Write!", __FILE__, __LINE__);
-
-		if(is_ok)
+		db_store_read(p_server->p_store, p_key, &p_payload, &has_found);
+		if(has_found)
 		{
 			char answer[100];
-			snprintf(answer, sizeof answer / sizeof answer[0] - 1 , "Ok %s", p_ticket);
+			snprintf(answer, sizeof answer / sizeof answer[0] - 1 , "Ok %s", p_payload);
+			free(p_payload);
 			db_message_set_payload(p_answer, answer);
 		}
 		else
+			db_message_set_payload(p_answer, "Ko\nNot Found");
+
+	}
+	else if(0 == strcmp("new", p_verb))
+	{
+		bool is_ok = false;
+
+		db_message_get_payload(p_request, &p_payload);
+		db_store_write(p_server->p_store, p_key, p_payload, &is_ok);
+		free(p_payload);
+
+		db_app_log(gp_app, "Write!", __FILE__, __LINE__);
+
+		if(is_ok)
 		{
-			db_message_set_payload(p_answer, "Ko\nFailure");
+			db_message_set_payload(p_answer, "Ok");
 		}
+		else
+			db_message_set_payload(p_answer, "Ko\nFailure");
+	}
+	else if(0 == strcmp("stop", p_verb))
+	{
+		db_message_set_payload(p_answer, "Ok");
+		p_server->is_running = false;
 	}
 
 	free(p_key);
@@ -168,20 +174,20 @@ void db_server_process(struct db_server * p_server, struct db_message * p_reques
 void db_server_listen(struct db_server * p_server, const char * socket_path)
 {
 	p_server->socket_fd = socket(AF_UNIX, SOCK_STREAM, 0);
-	CHECK_INT(p_server->p_app, p_server->socket_fd);
+	CHECK_INT(p_server->socket_fd);
 
 	strcpy(p_server->self_addr.sun_path, socket_path);
 
-	CHECK_INT(p_server->p_app, bind(p_server->socket_fd
+	CHECK_INT(bind(p_server->socket_fd
 				, (struct sockaddr *) &p_server->self_addr
 				, sizeof p_server->self_addr));
 
-	CHECK_INT(p_server->p_app, listen(p_server->socket_fd, 0));
+	CHECK_INT(listen(p_server->socket_fd, 0));
 }
 
 void db_server_session_begin(struct db_server * p_server)
 {
-	CHECK_INT(p_server->p_app, p_server->session_fd = accept(p_server->socket_fd
+	CHECK_INT(p_server->session_fd = accept(p_server->socket_fd
 				, (struct sockaddr *) &p_server->remote_addr
 				, &p_server->remote_addr_size));
 }
@@ -204,14 +210,14 @@ void db_server_read(struct db_server * p_server, char **pp_payload)
 	do
 	{
 		reading_count = read(p_server->session_fd, &p_server->buffer, DB_BUFFER_SIZE);
-		CHECK_INT(p_server->p_app, reading_count);
+		CHECK_INT(reading_count);
 
 		if(0 == reading_count)
 			break;
 
 		payload_size += min(DB_BUFFER_SIZE, reading_count);
 		p_payload = realloc(p_payload, (payload_size + 1) * sizeof *p_payload);
-		CHECK_NULL(p_server->p_app, p_payload);
+		CHECK_NULL(p_payload);
 		strncat(p_payload, p_server->buffer, min(DB_BUFFER_SIZE, reading_count));
 
 	} while(reading_count > DB_BUFFER_SIZE);
@@ -225,13 +231,15 @@ void db_server_answer(struct db_server * p_server, struct db_message * p_answer)
 	db_message_get_verb(p_answer, &p_verb);
 	db_message_get_payload(p_answer, &p_payload);
 
-	char buffer[1024];
-	memset(&buffer, 0, sizeof buffer);
+	if(!p_payload ||!p_verb)
+		db_app_error(gp_app, "Malformed answer", __FILE__, __LINE__);
 
+	char buffer[1024];
 	int write_count = snprintf(buffer, sizeof buffer / sizeof buffer[0] - 1, p_payload);
+	CHECK_INT(write_count);
 
 	int written = write(p_server->session_fd, buffer, min(write_count, 1024 - 1));
-	CHECK_INT(p_server->p_app, written);
+	CHECK_INT(written);
 
 	free(p_payload);
 }

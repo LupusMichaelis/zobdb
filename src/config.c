@@ -19,6 +19,7 @@ struct db_config
 APP_VECTOR_ALLOC(config)
 APP_VECTOR_CREATE(config)
 APP_VECTOR_CLONE(config)
+APP_VECTOR_COPY(config)
 APP_VECTOR_DISPOSE(config)
 
 void db_config_vector_set(struct db_config ** pp, size_t position, struct pair * p_pair)
@@ -48,9 +49,8 @@ APP_CREATE(config)
 APP_CLONE(config)
 APP_DISPOSE(config)
 
-void db_config_init(struct db_config * p_config, struct db_app * p_app)
+void db_config_init(struct db_config * p_config)
 {
-	p_config->p_app = p_app;
 }
 
 void db_config_clean(struct db_config * p_config, bool has_to_dispose)

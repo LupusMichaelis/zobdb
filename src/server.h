@@ -5,9 +5,9 @@ struct db_app;
 struct db_server;
 struct db_message;
 
-void db_server_create(struct db_server ** pp_server, struct db_app * p_app);
-void db_server_alloc(struct db_server ** pp_server, struct db_app * p_app);
-void db_server_init(struct db_server * p_server, struct db_app * p_app);
+void db_server_create(struct db_server ** pp_server);
+void db_server_alloc(struct db_server ** pp_server);
+void db_server_init(struct db_server * p_server);
 void db_server_clean(struct db_server * p_server, bool has_to_dispose);
 
 int db_server_run(struct db_server * p_server);

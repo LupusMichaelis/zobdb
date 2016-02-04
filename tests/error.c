@@ -26,12 +26,12 @@ int main(int argc, char *argv[])
 	db_error_init(p_error);
 	db_error_set_is_fatal(p_error, false);
 
-	DB_ERROR_PRINTF(p_error, "%s\n", "This message should be a notice");
-	DB_ERROR_PRINTF(p_error, "%s\n", "This message should be displayed and app continued");
+	DB_ERROR_PRINTF(p_error, "%s", "This message should be a notice");
+	DB_ERROR_PRINTF(p_error, "%s", "This message should be displayed and app continued");
 
 	db_error_set_is_fatal(p_error, true);
 	should_ve_exited = true;
-	DB_ERROR_PRINTF(p_error, "%s\n", "This message should be displayed and app exited");
+	DB_ERROR_PRINTF(p_error, "%s", "This message should be displayed and app exited");
 	assert(0);
 
 	return 0;

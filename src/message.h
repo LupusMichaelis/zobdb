@@ -17,13 +17,13 @@ struct db_server;
 
 struct db_message;
 
-void db_message_create(struct db_message ** pp_message, struct db_app * p_app);
+void db_message_create(struct db_message ** pp_message);
 void db_message_clone(struct db_message * p_message, struct db_message ** pp_message);
 void db_message_dispose(struct db_message ** pp_message);
 
-void db_message_alloc(struct db_message ** pp_message, struct db_app * p_app);
+void db_message_alloc(struct db_message ** pp_message);
 
-void db_message_init(struct db_message * p_message, struct db_app * p_app);
+void db_message_init(struct db_message * p_message);
 void db_message_copy(struct db_message * p_message_orig, struct db_message * p_message_dest);
 void db_message_clean(struct db_message * p_message, bool has_to_dispose);
 

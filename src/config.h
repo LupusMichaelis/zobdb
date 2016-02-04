@@ -9,18 +9,20 @@ struct db_app;
 #	include <stddef.h>
 #	include <stdbool.h>
 
-void db_config_vector_alloc(struct db_config *** ppp, struct db_app * p_app, size_t count);
-void db_config_vector_create(struct db_config *** ppp, struct db_app * p_app, size_t count);
+void db_config_vector_alloc(struct db_config *** ppp, size_t count);
+void db_config_vector_create(struct db_config *** ppp, size_t count);
 void db_config_vector_dispose(struct db_config *** pp);
 void db_config_vector_clone(struct db_config ** pp, struct db_config *** ppp);
+void db_config_vector_copy(struct db_config ** pp_from, struct db_config ** pp_to);
+void db_config_vector_clean(struct db_config ** pp, bool has_to_dispose);
 
 void db_config_vector_set(struct db_config ** pp, size_t position, struct pair * p_pair);
 void db_config_vector_find(struct db_config ** pp, size_t position, void * p_value);
 void db_config_vector_get(struct db_config ** pp, size_t position, void ** pp_value);
 void db_config_vector_get_by_name(struct db_config ** pp, char * p_name, void ** pp_value);
 
-void db_config_create(struct db_config ** pp_config, struct db_app * p_app);
-void db_config_init(struct db_config * p_config, struct db_app * p_app);
+void db_config_create(struct db_config ** pp_config);
+void db_config_init(struct db_config * p_config);
 
 void db_config_set(struct db_config * p_config, struct pair * p_key_value);
 void db_config_update(struct db_config * p_config, struct pair key_value);

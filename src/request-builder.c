@@ -5,10 +5,10 @@
 #include "object.h"
 
 #include <stdlib.h>
+#include <assert.h>
 
 struct db_request_builder
 {
-	struct db_app * p_app;
 	struct db_message * p_request;
 
 	int verb;
@@ -16,9 +16,11 @@ struct db_request_builder
 
 	bool has_verb;
 	bool is_bad_request;
+	bool is_header_parsed;
 	bool need_moar;
 
 	struct db_string * p_buffer;
+	struct db_string * p_payload;
 
 	// boundaries of the current sequence to analyse in buffer
 	size_t first;
@@ -37,6 +39,7 @@ static char * gpc_verbs[] = {
 	VERB_READ,
 	VERB_DELETE,
 	VERB_UPDATE,
+	"stop",
 	(char *)NULL,
 };
 
@@ -45,13 +48,14 @@ APP_CREATE(request_builder)
 APP_CLONE(request_builder)
 APP_DISPOSE(request_builder)
 
-void db_request_builder_init(struct db_request_builder * p_rb, struct db_app * p_app)
+void db_request_builder_init(struct db_request_builder * p_rb)
 {
-	p_rb->p_app = p_app;
-	db_message_create(&p_rb->p_request, p_app);
-	db_string_create(&p_rb->p_buffer, p_app);
+	db_message_create(&p_rb->p_request);
+	db_string_create(&p_rb->p_buffer);
+	db_string_create(&p_rb->p_payload);
 
 	p_rb->is_bad_request = false;
+	p_rb->is_header_parsed = false;
 	p_rb->need_moar = true;
 
 	p_rb->first = 0;
@@ -67,6 +71,9 @@ void db_request_builder_clean(struct db_request_builder * p_rb, bool has_to_disp
 		if(p_rb->p_buffer)
 			db_string_dispose(&p_rb->p_buffer);
 
+		if(p_rb->p_payload)
+			db_string_dispose(&p_rb->p_payload);
+
 		if(p_rb->p_request)
 			db_message_dispose(&p_rb->p_request);
 	}
@@ -76,7 +83,6 @@ void db_request_builder_clean(struct db_request_builder * p_rb, bool has_to_disp
 
 void db_request_builder_copy(struct db_request_builder * p_orig, struct db_request_builder * p_dest)
 {
-	p_dest->p_app = p_orig->p_app;
 	db_message_clone(p_orig->p_request, &p_dest->p_request);
 
 	p_dest->verb = p_orig->verb;
@@ -84,9 +90,11 @@ void db_request_builder_copy(struct db_request_builder * p_orig, struct db_reque
 
 	p_dest->has_verb = p_orig->has_verb;
 	p_dest->is_bad_request = p_orig->is_bad_request;
+	p_dest->is_header_parsed = p_orig->is_header_parsed;
 	p_dest->need_moar = p_orig->need_moar;
 
 	db_string_clone(p_orig->p_buffer, &p_dest->p_buffer);
+	db_string_clone(p_orig->p_payload, &p_dest->p_payload);
 
 	// boundaries of the current sequence to analyse in buffer
 	p_dest->first = p_orig->first;
@@ -109,6 +117,7 @@ void db_request_builder_parse(
 		if(!p_rb->has_verb)
 			db_request_builder_find_verb(p_rb);
 		else
+		{
 			switch(p_rb->verb)
 			{
 				case 0 /* VERB_NEW */:
@@ -127,9 +136,11 @@ void db_request_builder_parse(
 					db_request_builder_parse_update(p_rb);
 					break;
 				default:
-					db_app_error(p_rb->p_app, "Invalid verb identifier", __FILE__, __LINE__);
+					db_app_error(gp_app, "Invalid verb identifier", __FILE__, __LINE__);
 			}
 
+			db_message_set_verb(p_rb->p_request, gpc_verbs[p_rb->verb]);
+		}
 		if(p_rb->is_bad_request)
 			break;
 
@@ -188,8 +199,14 @@ void db_request_builder_find_verb(struct db_request_builder * p_rb)
 	}
 }
 
-void db_request_builder_parse_new(struct db_request_builder * p_rb)
+// Parse the header, and move set the start position to the body start
+void db_request_builder_parse_header(struct db_request_builder * p_rb)
 {
+	if(p_rb->is_header_parsed)
+		return;
+
+	p_rb->current = 0;
+
 	bool has_found = false;
 	size_t line_feed = 0;
 
@@ -197,11 +214,32 @@ void db_request_builder_parse_new(struct db_request_builder * p_rb)
 	if(!has_found)
 		return; // We don't have enough data to take a decision
 
+	db_message_set_verb(p_rb->p_request, gpc_verbs[p_rb->verb]);
+
+	size_t word_separator = 0;
+	char * p_key = NULL;
+	db_string_get_data(p_rb->p_buffer, p_rb->first, line_feed, &p_key);
+	db_message_set_key(p_rb->p_request, p_key);
+
+	p_rb->first = has_found ? word_separator : line_feed;
+	++p_rb->first;
+	p_rb->is_header_parsed = true;
+}
+
+void db_request_builder_parse_new(struct db_request_builder * p_rb)
+{
+	bool has_found = false;
+	size_t line_feed = 0;
+
+	db_string_find_char(p_rb->p_buffer, '\n', p_rb->first, p_rb->last, &line_feed, &has_found);
+	assert(has_found);
+
 	size_t word_separator = 0;
 	db_string_find_char(p_rb->p_buffer, ' ', p_rb->first, p_rb->last, &word_separator, &has_found);
 
 	if(!has_found)
 	{
+		p_rb->need_moar = false;
 		p_rb->is_bad_request = true;
 		return;
 	}
@@ -229,23 +267,7 @@ void db_request_builder_parse_clone(struct db_request_builder * p_rb)
 
 void db_request_builder_parse_read(struct db_request_builder * p_rb)
 {
-	bool has_found = false;
-	size_t line_feed = 0;
-
-	db_string_find_char(p_rb->p_buffer, '\n', p_rb->first, p_rb->last, &line_feed, &has_found);
-	if(!has_found)
-		return; // We don't have enough data to take a decision
-
-	size_t word_separator = 0;
-	db_string_find_char(p_rb->p_buffer, ' ', p_rb->first, p_rb->last, &word_separator, &has_found);
-
-	char * p_key = NULL;
-	//char * p_option = NULL;
-
-	db_message_set_verb(p_rb->p_request, gpc_verbs[p_rb->verb]);
-
-	db_string_get_data(p_rb->p_buffer, p_rb->first, has_found ? word_separator : line_feed, &p_key);
-	db_message_set_key(p_rb->p_request, p_key);
+	db_request_builder_parse_header(p_rb);
 
 	/* TODO options!
 	if(has_found)
@@ -281,6 +303,28 @@ void db_request_builder_parse_delete(struct db_request_builder * p_rb)
 
 void db_request_builder_parse_update(struct db_request_builder * p_rb)
 {
-	fprintf(stderr, "Parse update\n");
-	p_rb->is_bad_request = true;
+	db_request_builder_parse_header(p_rb);
+
+	// An update request requires a body, but the header consumed all bytes!
+	if(p_rb->first > p_rb->last)
+	{
+		p_rb->need_moar = false;
+		p_rb->is_bad_request = true;
+		return;
+	}
+
+	////////////////////////////////////////////////////////////////////////////////
+	bool has_found = false;
+	size_t line_feed = 0;
+
+	db_string_find_char(p_rb->p_buffer, '\n', p_rb->first, p_rb->last, &line_feed, &has_found);
+	if(!has_found)
+		return; // We don't have enough data to take a decision
+
+	char * p_payload = NULL;
+	db_string_get_data(p_rb->p_buffer, p_rb->first, line_feed, &p_payload);
+	db_string_write(p_rb->p_payload, &p_rb->current, p_payload);
+	free(p_payload);
+
+	p_rb->need_moar = false;
 }

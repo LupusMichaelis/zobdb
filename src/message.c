@@ -6,8 +6,6 @@
 
 struct db_message
 {
-	struct db_app * p_app;
-
 	// head
 	char * p_verb;
 	char * p_key;
@@ -23,14 +21,13 @@ APP_CREATE(message)
 APP_CLONE(message)
 APP_DISPOSE(message)
 
-void db_message_init(struct db_message * p_message, struct db_app * p_app)
+void db_message_init(struct db_message * p_message)
 {
-	p_message->p_app = p_app;
+	memset(p_message, 0, sizeof *p_message);
 }
 
 void db_message_copy(struct db_message * p_message_orig, struct db_message * p_message_dest)
 {
-	p_message_dest->p_app = p_message_orig->p_app;
 	p_message_dest->p_verb = p_message_orig->p_verb;
 
 	if(p_message_orig->p_key)
@@ -79,14 +76,14 @@ void db_message_get_verb(struct db_message * p_message, char ** pp_verb)
 void db_message_set_key(struct db_message * p_message, char * p_key)
 {
 	p_message->p_key = realloc(p_message->p_key, 1 + strlen(p_key) * sizeof *p_key);
-	CHECK_NULL(p_message->p_app, p_message->p_key);
+	CHECK_NULL(p_message->p_key);
 	strcpy(p_message->p_key, p_key);
 }
 
 void db_message_get_key(struct db_message * p_message, char ** pp_key)
 {
 	char * p_key = calloc(1 + strlen(p_message->p_key), sizeof *p_key);
-	CHECK_NULL(p_message->p_app, p_key);
+	CHECK_NULL(p_key);
 	strcpy(p_key, p_message->p_key);
 
 	*pp_key = p_key;
@@ -101,7 +98,7 @@ void db_message_get_payload(struct db_message * p_message, char ** pp_payload)
 	}
 
 	char * p_payload = calloc(1 + strlen(p_message->p_payload), sizeof *p_payload);
-	CHECK_NULL(p_message->p_app, p_payload);
+	CHECK_NULL(p_payload);
 	strcpy(p_payload, p_message->p_payload);
 
 	*pp_payload = p_payload;
@@ -116,16 +113,19 @@ void db_message_set_payload(struct db_message * p_message, char * p_payload)
 	}
 
 	p_message->p_payload = calloc(1 + strlen(p_payload), sizeof *p_message->p_payload);
-	CHECK_NULL(p_message->p_app, p_message->p_payload);
+	CHECK_NULL(p_message->p_payload);
 	strcpy(p_message->p_payload, p_payload);
 }
 
 /*
 void db_message_append_payload(struct db_message * p_message, char * p_payload)
 {
+	CHECK_NULL(p_payload);
+	CHECK_NULL(p_message);
+
 	size_t new_size = (1 + strlen(p_message->p_payload) + strlen(p_payload)) * sizeof *p_payload;
 	p_message->p_payload = realloc(p_message->p_payload, new_size);
-	CHECK_NULL(p_message->p_app, p_message->p_payload);
+	CHECK_NULL(p_message->p_payload);
 	strcat(p_message->p_payload, p_payload);
 }
 */
