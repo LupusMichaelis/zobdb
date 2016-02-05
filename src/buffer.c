@@ -42,9 +42,12 @@ void zob_buffer_init(struct zob_buffer * p_buffer)
 
 void zob_buffer_clean(struct zob_buffer * p_buffer, bool has_to_dispose)
 {
+	struct zob_allocator * p_allocator = NULL;
+	zob_app_allocator_get(gp_app, &p_allocator);
+
 	if(has_to_dispose)
 		if(NULL != p_buffer->p_begin)
-			free(p_buffer->p_begin);
+			zob_allocator_do_release(p_allocator, (void **) &p_buffer->p_begin);
 
 	memset(p_buffer, 0, sizeof *p_buffer);
 }
@@ -87,20 +90,24 @@ void zob_buffer_ensure(struct zob_buffer * p_buffer, size_t from, size_t input_s
 	chunk_number += (input_size - available_size) % p_buffer->chunk_size ? 1 : 0;
 	int new_size = current_size + chunk_number * p_buffer->chunk_size;
 
+	struct zob_allocator * p_allocator = NULL;
+	zob_app_allocator_get(gp_app, &p_allocator);
 	// If p_begin point an automatic variable, we have to allocate a brand new memory
 	// chunk
 	if(p_buffer->is_auto)
 	{
 		char * p_auto = p_buffer->p_begin;
-		p_buffer->p_begin = malloc(new_size * sizeof *p_buffer->p_begin);
+		zob_allocator_do_allocate(p_allocator, (void **) &p_buffer->p_begin, new_size * sizeof *p_buffer->p_begin);
 		if(p_auto)
+		{
 			strcpy(p_buffer->p_begin, p_auto);
+			zob_allocator_do_release(p_allocator, (void **) &p_auto);
+		}
 		p_buffer->is_auto = false;
 	}
 	else
-	{
-		p_buffer->p_begin = realloc(p_buffer->p_begin, new_size * sizeof *p_buffer->p_begin);
-	}
+		zob_allocator_do_reallocate(p_allocator, (void **) &p_buffer->p_begin, new_size * sizeof *p_buffer->p_begin);
+
 	CHECK_NULL(p_buffer->p_begin);
 
 	if(p_buffer->p_end == NULL)
