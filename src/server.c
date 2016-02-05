@@ -39,6 +39,7 @@ struct zob_server
 
 APP_ALLOC(server)
 APP_CREATE(server)
+APP_DISPOSE(server)
 
 void zob_server_init(struct zob_server * p_server)
 {

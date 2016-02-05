@@ -9,6 +9,7 @@ struct zob_app;
 void zob_client_create(struct zob_client ** pp_client);
 void zob_client_alloc(struct zob_client ** pp_client);
 void zob_client_init(struct zob_client * p_client);
+void zob_client_dispose(struct zob_client ** pp_client);
 void zob_client_clean(struct zob_client * p_client, bool has_to_dispose);
 
 int zob_client_run(struct zob_client * p_client);

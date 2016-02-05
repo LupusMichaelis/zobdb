@@ -22,6 +22,7 @@ struct zob_client
 
 APP_ALLOC(client)
 APP_CREATE(client)
+APP_DISPOSE(client)
 
 void zob_client_init(struct zob_client * p_client)
 {

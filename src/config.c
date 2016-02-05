@@ -7,12 +7,8 @@
 #include <stdlib.h>
 #include <stdlib.h>
 
-struct zob_app;
-
 struct zob_config
 {
-	struct zob_app * p_app;
-
 	struct pair key_value;
 };
 
@@ -60,6 +56,5 @@ void zob_config_clean(struct zob_config * p_config, bool has_to_dispose)
 
 void zob_config_copy(struct zob_config * p_from, struct zob_config * p_to)
 {
-	p_to->p_app = p_from->p_app;
 	memcpy(&p_to->key_value, &p_from->key_value, sizeof p_to->key_value);
 }

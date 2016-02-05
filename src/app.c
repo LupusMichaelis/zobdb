@@ -41,9 +41,6 @@ struct zob_app
 	bool is_server: 1;
 	bool is_client: 1;
 
-	char * p_error;
-	void * p_con;
-
 	void * p_main_module;
 	struct zob_config ** pp_config;
 
@@ -116,17 +113,25 @@ void zob_app_setup(struct zob_app * p_app)
 		zob_client_create((struct zob_client **)&p_app->p_main_module);
 	else if(p_app->is_server)
 		zob_server_create((struct zob_server **)&p_app->p_main_module);
-/* XXX
 	else
 		zob_app_error(p_app, "Unknown module", __FILE__, __LINE__);
-*/
 }
 
-/*
 void zob_app_clean(struct zob_app * p_app, bool has_to_dispose)
 {
+	if(has_to_dispose)
+	{
+		if(p_app->is_client)
+			zob_client_dispose((struct zob_client **)&p_app->p_main_module);
+		else if(p_app->is_server)
+			zob_server_dispose((struct zob_server **)&p_app->p_main_module);
+
+		zob_config_vector_dispose(&p_app->pp_config);
+		zob_log_dispose(&p_app->p_log);
+	}
+
+	memset(p_app, 0, sizeof *p_app);
 }
-*/
 
 int zob_app_run(struct zob_app * p_app)
 {

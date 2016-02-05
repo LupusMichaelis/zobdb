@@ -29,12 +29,12 @@ void pod_name##_vector_alloc(pod_type *** ppp, size_t count)								\
 	/* Allocates a vector of struct pointers */												\
 	pod_type ** pp = NULL;																	\
 	pp = calloc(count + 1, sizeof *pp);														\
-	CHECK_NULL(pp);																	\
+	CHECK_NULL(pp);																			\
 																							\
 	/* Allocates elements  */																\
 	pod_type * p = NULL;																	\
 	p = calloc(count, sizeof *p);															\
-	CHECK_NULL(p);																	\
+	CHECK_NULL(p);																			\
 																							\
 	/* Hold elements in the vector */														\
 	pod_type ** it = pp;																	\
@@ -50,7 +50,7 @@ void pod_name##_vector_create(pod_type *** ppp, size_t count)								\
 {																							\
 	pod_type ** pp = NULL;																	\
 	pod_name##_vector_alloc(&pp, count);													\
-	CHECK_NULL(pp)																	\
+	CHECK_NULL(pp)																			\
 	pod_type ** it = pp;																	\
 	do																						\
 	{																						\
@@ -63,12 +63,12 @@ void pod_name##_vector_create(pod_type *** ppp, size_t count)								\
 }																							\
 
 #	define APP_POD_VECTOR_DISPOSE(pod_name, pod_type)										\
-void pod_name##_vector_dispose(pod_type *** pp)												\
+void pod_name##_vector_dispose(pod_type *** ppp)											\
 {																							\
-	do pod_name##_dispose(*pp);																\
-	while(*++pp);																			\
-	free(*pp);																				\
-	*pp = NULL;																				\
+	do pod_name##_dispose(*ppp);															\
+	while(*++*ppp);																			\
+	free(**ppp);																			\
+	*ppp = NULL;																			\
 }																							\
 
 #	define APP_POD_VECTOR_CLONE(pod_name, pod_type)											\

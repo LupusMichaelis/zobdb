@@ -11,7 +11,7 @@ struct zob_app;
 
 void zob_config_vector_alloc(struct zob_config *** ppp, size_t count);
 void zob_config_vector_create(struct zob_config *** ppp, size_t count);
-void zob_config_vector_dispose(struct zob_config *** pp);
+void zob_config_vector_dispose(struct zob_config *** ppp);
 void zob_config_vector_clone(struct zob_config ** pp, struct zob_config *** ppp);
 void zob_config_vector_copy(struct zob_config ** pp_from, struct zob_config ** pp_to);
 void zob_config_vector_clean(struct zob_config ** pp, bool has_to_dispose);

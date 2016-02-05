@@ -8,6 +8,7 @@ struct zob_message;
 void zob_server_create(struct zob_server ** pp_server);
 void zob_server_alloc(struct zob_server ** pp_server);
 void zob_server_init(struct zob_server * p_server);
+void zob_server_dispose(struct zob_server ** pp_server);
 void zob_server_clean(struct zob_server * p_server, bool has_to_dispose);
 
 int zob_server_run(struct zob_server * p_server);
