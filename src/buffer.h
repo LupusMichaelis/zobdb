@@ -25,7 +25,12 @@ void zob_buffer_clean(struct zob_buffer * p_buffer, bool has_to_dispose);
 void zob_buffer_dispose(struct zob_buffer ** pp_buffer);
 
 void zob_buffer_ensure(struct zob_buffer * p_buffer, size_t from, size_t input_size);
-void zob_buffer_write(struct zob_buffer * p_buffer, size_t * p_from, const char * p_text);
+void zob_buffer_write(struct zob_buffer * p_buffer, size_t * p_written, size_t from, size_t length, const char * p_text);
+
+void zob_buffer_size_get(struct zob_buffer * p_buffer, size_t * p_size);
+
+void zob_buffer_slice_get(struct zob_buffer * p_buffer, size_t from, size_t to, struct zob_buffer ** pp_slice);
+void zob_buffer_compare(struct zob_buffer * p_lhs, struct zob_buffer * p_rhs, int * diff);
 
 void zob_buffer_find_char(
 		struct zob_buffer * p_buffer,

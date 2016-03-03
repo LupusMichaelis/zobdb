@@ -4,15 +4,12 @@
 #include "object.h"
 
 #include <stdlib.h>
-#include <stdlib.h>
 #include <assert.h>
 
 struct zob_app;
 
 struct zob_buffer
 {
-	struct zob_app * p_app;
-
 	// On demand, the buffer will be extended of chunck_size elements
 	size_t chunk_size;
 
@@ -22,11 +19,14 @@ struct zob_buffer
 	// boundaries of allocated memory
 	char * p_begin;
 	char * p_end;
+
+	// The window on actual carried data
+	size_t size;
 };
 
 void _zob_buffer_error(struct zob_buffer * p_buffer, char * p_message, char * p_file, int line)
 {
-	zob_app_error(p_buffer->p_app, p_message, p_file, line);
+	zob_app_error(gp_app, p_message, p_file, line);
 }
 
 APP_ALLOC(buffer)
@@ -50,15 +50,21 @@ void zob_buffer_clean(struct zob_buffer * p_buffer, bool has_to_dispose)
 			zob_allocator_do_release(p_allocator, (void **) &p_buffer->p_begin);
 
 	memset(p_buffer, 0, sizeof *p_buffer);
+	p_buffer->size = 0;
 }
 
 void zob_buffer_copy(struct zob_buffer * p_from, struct zob_buffer * p_to)
 {
-	p_to->p_app = p_from->p_app;
 	p_to->chunk_size = p_from->chunk_size;
 
-	p_to->p_begin = calloc(p_from->p_end - p_from->p_begin, sizeof *p_to->p_begin);
-	strncpy(p_to->p_begin, p_from->p_begin, p_from->p_end - p_from->p_begin);
+	struct zob_allocator * p_allocator = NULL;
+	zob_app_allocator_get(gp_app, &p_allocator);
+	zob_allocator_do_allocate(p_allocator, (void **)&p_to->p_begin, (p_from->p_end - p_from->p_begin) * sizeof *p_to->p_begin);
+	memcpy(p_to->p_begin, p_from->p_begin, p_from->p_end - p_from->p_begin);
+
+	size_t buffer_size = 0;
+	zob_buffer_size_get(p_from, &buffer_size);
+	p_to->size = buffer_size;
 }
 
 void zob_buffer_set_is_auto(struct zob_buffer * p_buffer, bool is_auto)
@@ -68,20 +74,20 @@ void zob_buffer_set_is_auto(struct zob_buffer * p_buffer, bool is_auto)
 
 // Ensure we have enough room to write input_size elements from the from position and
 // apply a linear grow algorithm, and fail if we can't grow.
-void zob_buffer_ensure(struct zob_buffer * p_buffer, size_t from, size_t input_size)
+void zob_buffer_ensure(struct zob_buffer * p_buffer, size_t position, size_t input_size)
 {
+	if(!p_buffer->is_auto && position > p_buffer->size)
+	{
+		_zob_buffer_error(p_buffer, "Attempt to resize a fixed size buffer", __FILE__, __LINE__);
+		abort();
+	}
+
 	int available_size = 0;
 	if(p_buffer->p_end > p_buffer->p_begin)
-		available_size = p_buffer->p_end - (p_buffer->p_begin + from);
+		available_size = p_buffer->size - position;
 
 	if(available_size >= input_size)
 		return;
-
-	if(!p_buffer->is_auto)
-	{
-		_zob_buffer_error(p_buffer, "Attempt to resize a fixed size buffer", __FILE__, __LINE__);
-		return;
-	}
 
 	int current_size = p_buffer->p_end - p_buffer->p_begin;
 	// We compute the memory actually requested, and count how many chunks are needed
@@ -100,13 +106,12 @@ void zob_buffer_ensure(struct zob_buffer * p_buffer, size_t from, size_t input_s
 		zob_allocator_do_allocate(p_allocator, (void **) &p_buffer->p_begin, new_size * sizeof *p_buffer->p_begin);
 		if(p_auto)
 		{
-			strcpy(p_buffer->p_begin, p_auto);
+			memcpy(p_buffer->p_begin, p_auto, p_buffer->p_end - p_auto);
 			zob_allocator_do_release(p_allocator, (void **) &p_auto);
 		}
-		p_buffer->is_auto = false;
+		else
+			p_buffer->size = 0;
 	}
-	else
-		zob_allocator_do_reallocate(p_allocator, (void **) &p_buffer->p_begin, new_size * sizeof *p_buffer->p_begin);
 
 	CHECK_NULL(p_buffer->p_begin);
 
@@ -114,19 +119,62 @@ void zob_buffer_ensure(struct zob_buffer * p_buffer, size_t from, size_t input_s
 		p_buffer->p_end = p_buffer->p_begin;
 
 	p_buffer->p_end += chunk_number * p_buffer->chunk_size;
+	p_buffer->size = position + input_size;
 }
 
-void zob_buffer_write(struct zob_buffer * p_buffer, size_t * p_from, const char * p_text)
+void zob_buffer_write(struct zob_buffer * p_buffer, size_t * p_written, size_t from, size_t length, const char * p_text)
 {
-	int length = strlen(p_text);
+	if(!p_buffer->is_auto)
+		length = MIN(length, p_buffer->size);
 
-	if(!length) zob_app_error(p_buffer->p_app, "Empty write", __FILE__, __LINE__);
+	if(!length) zob_app_error(gp_app, "Empty write", __FILE__, __LINE__);
 
-	zob_buffer_ensure(p_buffer, *p_from, length);
-	strcpy(p_buffer->p_begin + *p_from, p_text);
-	if(p_from)
-		*p_from += length;
+	if(p_buffer->is_auto);
+		zob_buffer_ensure(p_buffer, from, length);
+	size_t buffer_size = 0;
+	zob_buffer_size_get(p_buffer, &buffer_size);
+
+	memcpy(p_buffer->p_begin + from, p_text, length);
+	p_buffer->size = from + length;
+	if(p_written)
+		*p_written = length;
 }
+
+void zob_buffer_slice_get(struct zob_buffer * p_buffer, size_t from, size_t to, struct zob_buffer ** pp_slice)
+{
+	zob_buffer_create(pp_slice);
+	zob_buffer_set_is_auto(*pp_slice, 1);
+	zob_buffer_ensure(*pp_slice, from, to - from);
+	zob_buffer_set_is_auto(*pp_slice, 0);
+	zob_buffer_write(*pp_slice, NULL, 0, to - from, p_buffer->p_begin + from);
+	zob_buffer_set_is_auto(*pp_slice, 1);
+}
+
+void zob_buffer_compare(struct zob_buffer * p_lhs, struct zob_buffer * p_rhs, int * diff)
+{
+	if(p_lhs->size != p_rhs->size)
+	{
+		*diff = p_rhs->size - p_lhs->size;
+		return;
+	}
+
+	*diff = 0;
+	char * lhs = NULL;
+	char * rhs = NULL;
+	do
+	{
+		lhs = p_lhs->p_begin + *diff;
+		rhs = p_rhs->p_begin + *diff;
+		if(*lhs != *rhs)
+			break;
+
+		++*diff;
+	}
+	while(*diff < p_rhs->size);
+
+	*diff = *rhs - *lhs;
+}
+
 
 void zob_buffer_get(struct zob_buffer * p_buffer, char ** pp_text)
 {
@@ -145,9 +193,9 @@ void zob_buffer_get_data(struct zob_buffer * p_buffer, size_t first, size_t last
 	*pp_string = p_string;
 }
 
-void zob_buffer_size(struct zob_buffer * p_buffer, size_t * p_size)
+void zob_buffer_size_get(struct zob_buffer * p_buffer, size_t * p_size)
 {
-	*p_size = p_buffer->p_end - p_buffer->p_begin;
+	*p_size = p_buffer->size;
 }
 
 void zob_buffer_find_char(
@@ -189,7 +237,7 @@ void zob_buffer_find_string(
 	*p_position = first;
 
 	size_t size = 0;
-	zob_buffer_size(p_buffer, &size);
+	zob_buffer_size_get(p_buffer, &size);
 
 	size_t needle_size = strlen(p_needle);
 	if(0 == needle_size || needle_size > size)

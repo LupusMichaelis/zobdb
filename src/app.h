@@ -6,6 +6,12 @@
 #	include <stdio.h>
 #	include <stdbool.h>
 
+#	define MIN(A, B) \
+	((A) < (B) ? (A) : (B))
+
+#	define MAX(A, B) \
+	((A) > (B) ? (A) : (B))
+
 #	define CHECK_INT(int_val)\
 		if((int_val) < 0) \
 			zob_app_error(gp_app, strerror(errno), __FILE__, __LINE__);

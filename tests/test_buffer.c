@@ -40,7 +40,7 @@ Ensure(buffer, create_empty_and_assign_data)
 	char const * p_message = "Alea jacta est";
 	zob_buffer_set_is_auto(p_buffer, true);
 	size_t size = 0;
-	zob_buffer_write(p_buffer, &size, p_message);
+	zob_buffer_write(p_buffer, &size, 0, strlen(p_message), p_message);
 	assert_that(strlen(p_message), is_equal_to(size));
 
 	zob_buffer_dispose(&p_buffer);
@@ -56,7 +56,7 @@ Ensure(buffer, create_empty_and_assign_data_then_reset)
 	char const * p_message = "Alea jacta est";
 	zob_buffer_set_is_auto(p_buffer, true);
 	size_t size = 0;
-	zob_buffer_write(p_buffer, &size, p_message);
+	zob_buffer_write(p_buffer, &size, 0, strlen(p_message), p_message);
 	assert_that(strlen(p_message), is_equal_to(size));
 
 	zob_buffer_fill(p_buffer, 1024, '\0');
@@ -74,7 +74,7 @@ Ensure(buffer, create_empty_and_assign_data_and_search_for_char)
 	char const * p_message = "Alea jacta est";
 	zob_buffer_set_is_auto(p_buffer, true);
 	size_t size = 0;
-	zob_buffer_write(p_buffer, &size, p_message);
+	zob_buffer_write(p_buffer, &size, 0, strlen(p_message), p_message);
 	assert_that(strlen(p_message), is_equal_to(size));
 
 	size_t position = 0;
@@ -97,7 +97,7 @@ Ensure(buffer, create_empty_and_assign_data_and_search_for_string)
 	char const * p_message = "Alea jacta est";
 	zob_buffer_set_is_auto(p_buffer, true);
 	size_t size = 0;
-	zob_buffer_write(p_buffer, &size, p_message);
+	zob_buffer_write(p_buffer, &size, 0, strlen(p_message), p_message);
 	assert_that(strlen(p_message), is_equal_to(size));
 
 	size_t position = 0;
@@ -141,16 +141,166 @@ Ensure(buffer, create_empty_and_assign_data_and_search_for_string)
 	assert_that(p_buffer, is_equal_to(NULL));
 }
 
-/*
+Ensure(buffer, create_and_assign_and_slice)
+{
+	struct zob_buffer * p_buffer = NULL;
+	zob_buffer_create(&p_buffer);
+	assert_that(p_buffer, is_not_equal_to(NULL));
+
+	char const * p_message = "Alea jacta est";
+	zob_buffer_set_is_auto(p_buffer, true);
+	size_t size = 0;
+	zob_buffer_write(p_buffer, &size, 0, strlen(p_message), p_message);
+	assert_that(strlen(p_message), is_equal_to(size));
+
+	struct zob_buffer * p_slice = NULL;
+	zob_buffer_slice_get(p_buffer, 5, 11, &p_slice);
+	assert_that(p_slice, is_not_equal_to(NULL));
+	zob_buffer_size_get(p_slice, &size);
+	assert_that(size, is_equal_to(11 - 5));
+}
+
+Ensure(buffer, compare_created_buffers)
+{
+	struct zob_buffer * p_first = NULL;
+	zob_buffer_create(&p_first);
+	assert_that(p_first, is_not_equal_to(NULL));
+
+	char const * p_message = "Alea jacta est";
+	zob_buffer_set_is_auto(p_first, true);
+	zob_buffer_write(p_first, NULL, 0, strlen(p_message), p_message);
+
+	struct zob_buffer * p_second = NULL;
+	zob_buffer_create(&p_second);
+	zob_buffer_set_is_auto(p_second, true);
+	zob_buffer_write(p_second, NULL, 0, strlen(p_message), p_message);
+
+	int diff = 42;
+	zob_buffer_compare(p_first, p_second, &diff);
+	assert_that(diff, is_equal_to(0));
+}
+
+Ensure(buffer, compare_cloned_buffers)
+{
+	struct zob_buffer * p_first = NULL;
+	zob_buffer_create(&p_first);
+	assert_that(p_first, is_not_equal_to(NULL));
+
+	char const * p_message = "Alea jacta est";
+	zob_buffer_set_is_auto(p_first, true);
+	zob_buffer_write(p_first, NULL, 0, strlen(p_message), p_message);
+
+	struct zob_buffer * p_second = NULL;
+	zob_buffer_clone(p_first, &p_second);
+
+	int diff = 42;
+	zob_buffer_compare(p_first, p_second, &diff);
+	assert_that(diff, is_equal_to(0));
+}
+
+Ensure(buffer, compare_different_buffers)
+{
+	struct zob_buffer * p_first = NULL;
+	zob_buffer_create(&p_first);
+	assert_that(p_first, is_not_equal_to(NULL));
+
+	char const * p_first_message = "Alea jacta est";
+	zob_buffer_set_is_auto(p_first, true);
+	zob_buffer_write(p_first, NULL, 0, strlen(p_first_message), p_first_message);
+
+	struct zob_buffer * p_second = NULL;
+	zob_buffer_create(&p_second);
+
+	char const * p_second_message = "Cogito ergo sum";
+	zob_buffer_set_is_auto(p_second, true);
+	zob_buffer_write(p_second, NULL, 0, strlen(p_second_message), p_second_message);
+
+	int diff = 42;
+	zob_buffer_compare(p_first, p_second, &diff);
+	assert_that(diff, is_not_equal_to(0));
+	assert_that(diff, is_not_equal_to(42));
+}
+
+Ensure(buffer, compare_buffers_with_slice)
+{
+	struct zob_buffer * p_original = NULL;
+	zob_buffer_create(&p_original);
+	assert_that(p_original, is_not_equal_to(NULL));
+
+	char const * p_original_message = "Alea jacta est";
+	zob_buffer_set_is_auto(p_original, true);
+	zob_buffer_write(p_original, NULL, 0, strlen(p_original_message), p_original_message);
+
+	struct zob_buffer * p_alea = NULL;
+	zob_buffer_create(&p_alea);
+
+	char const * p_alea_message = "Alea";
+	zob_buffer_set_is_auto(p_alea, true);
+	zob_buffer_write(p_alea, NULL, 0, strlen(p_alea_message), p_alea_message);
+
+	int diff = 42;
+	zob_buffer_compare(p_original, p_alea, &diff);
+	assert_that(diff, is_not_equal_to(0));
+	assert_that(diff, is_not_equal_to(42));
+
+	struct zob_buffer * p_slice = NULL;
+	zob_buffer_slice_get(p_original, 0, strlen(p_alea_message), &p_slice);
+
+	zob_buffer_compare(p_slice, p_alea, &diff);
+	assert_that(diff, is_equal_to(0));
+	assert_that(diff, is_not_equal_to(42));
+}
+
+Ensure(buffer, compare_buffers_with_slice_from_middle)
+{
+	struct zob_buffer * p_original = NULL;
+	zob_buffer_create(&p_original);
+	assert_that(p_original, is_not_equal_to(NULL));
+
+	char const * p_original_message = "Alea jacta est";
+	zob_buffer_set_is_auto(p_original, true);
+	zob_buffer_write(p_original, NULL, 0, strlen(p_original_message), p_original_message);
+
+	struct zob_buffer * p_jacta = NULL;
+	zob_buffer_create(&p_jacta);
+
+	char const * p_jacta_message = "jacta";
+	zob_buffer_set_is_auto(p_jacta, true);
+	zob_buffer_write(p_jacta, NULL, 0, strlen(p_jacta_message), p_jacta_message);
+
+	int diff = 42;
+	zob_buffer_compare(p_original, p_jacta, &diff);
+	assert_that(diff, is_not_equal_to(0));
+	assert_that(diff, is_not_equal_to(42));
+
+	struct zob_buffer * p_slice = NULL;
+	zob_buffer_slice_get(p_original, 5, 5 + strlen(p_jacta_message), &p_slice);
+
+	zob_buffer_compare(p_slice, p_jacta, &diff);
+	assert_that(diff, is_equal_to(0));
+	assert_that(diff, is_not_equal_to(42));
+}
+
+#if 0
 int main()
 {
 	TestSuite * suite = create_test_suite();
+	/*
 	add_test_with_context(suite, buffer, create_empty);
 	add_test_with_context(suite, buffer, create_empty_and_assign_data);
+	add_test_with_context(suite, buffer, create_empty_and_assign_data_then_reset);
+	add_test_with_context(suite, buffer, create_empty_and_assign_data_and_search_for_string);
+	add_test_with_context(suite, buffer, create_empty_and_assign_data);
+	add_test_with_context(suite, buffer, create_and_assign_and_slice);
+	add_test_with_context(suite, buffer, compare_cloned_buffers);
+	add_test_with_context(suite, buffer, compare_buffers_with_slice_from_middle);
+	*/
 
-	run_single_test(suite, "Buffer", create_text_reporter());
 	run_test_suite(suite, create_text_reporter());
+	setup_reporting(create_text_reporter());
+
+	buffer__compare_buffers_with_slice_from_middle();
 
 	return EXIT_SUCCESS;
 }
-*/
+#endif // 0
