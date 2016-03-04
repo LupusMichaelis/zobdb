@@ -62,7 +62,7 @@ void zob_string_ensure(struct zob_string * p_string, size_t from, size_t input_s
 
 void zob_string_write(struct zob_string * p_string, size_t * p_from, const char * p_text)
 {
-	zob_buffer_write(p_string->p_buffer, p_from, p_text);
+	zob_buffer_write(p_string->p_buffer, p_from, *p_from, strlen(p_text), p_text);
 }
 
 void zob_string_get(struct zob_string * p_string, char ** pp_text)
