@@ -150,29 +150,29 @@ void zob_buffer_slice_get(struct zob_buffer * p_buffer, size_t from, size_t to, 
 	zob_buffer_set_is_auto(*pp_slice, 1);
 }
 
-void zob_buffer_compare(struct zob_buffer * p_lhs, struct zob_buffer * p_rhs, int * diff)
+void zob_buffer_compare(struct zob_buffer * p_lhs, struct zob_buffer * p_rhs, int * p_diff)
 {
 	if(p_lhs->size != p_rhs->size)
 	{
-		*diff = p_rhs->size - p_lhs->size;
+		*p_diff = p_rhs->size - p_lhs->size;
 		return;
 	}
 
-	*diff = 0;
+	*p_diff = 0;
 	char * lhs = NULL;
 	char * rhs = NULL;
 	do
 	{
-		lhs = p_lhs->p_begin + *diff;
-		rhs = p_rhs->p_begin + *diff;
+		lhs = p_lhs->p_begin + *p_diff;
+		rhs = p_rhs->p_begin + *p_diff;
 		if(*lhs != *rhs)
 			break;
 
-		++*diff;
+		++*p_diff;
 	}
-	while(*diff < p_rhs->size);
+	while(*p_diff < p_rhs->size);
 
-	*diff = *rhs - *lhs;
+	*p_diff = *rhs - *lhs;
 }
 
 

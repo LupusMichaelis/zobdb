@@ -30,7 +30,7 @@ void zob_buffer_write(struct zob_buffer * p_buffer, size_t * p_written, size_t f
 void zob_buffer_size_get(struct zob_buffer * p_buffer, size_t * p_size);
 
 void zob_buffer_slice_get(struct zob_buffer * p_buffer, size_t from, size_t to, struct zob_buffer ** pp_slice);
-void zob_buffer_compare(struct zob_buffer * p_lhs, struct zob_buffer * p_rhs, int * diff);
+void zob_buffer_compare(struct zob_buffer * p_lhs, struct zob_buffer * p_rhs, int * p_diff);
 
 void zob_buffer_find_char(
 		struct zob_buffer * p_buffer,
