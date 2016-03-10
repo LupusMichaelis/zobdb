@@ -184,6 +184,8 @@ Ensure(buffer, create_empty_and_assign_data_and_amend)
 
 	zob_buffer_dispose(&p_buffer);
 	assert_that(p_buffer, is_equal_to(NULL));
+	zob_buffer_dispose(&p_expected);
+	assert_that(p_expected, is_equal_to(NULL));
 }
 
 Ensure(buffer, create_and_assign_and_slice)
@@ -203,6 +205,7 @@ Ensure(buffer, create_and_assign_and_slice)
 	assert_that(p_slice, is_not_equal_to(NULL));
 	zob_buffer_size_get(p_slice, &size);
 	assert_that(size, is_equal_to(11 - 5));
+	zob_buffer_dispose(&p_buffer);
 }
 
 Ensure(buffer, compare_created_buffers)
@@ -223,6 +226,8 @@ Ensure(buffer, compare_created_buffers)
 	int diff = 42;
 	zob_buffer_compare(p_first, p_second, &diff);
 	assert_that(diff, is_equal_to(0));
+	zob_buffer_dispose(&p_first);
+	zob_buffer_dispose(&p_second);
 }
 
 Ensure(buffer, compare_cloned_buffers)
@@ -241,6 +246,7 @@ Ensure(buffer, compare_cloned_buffers)
 	int diff = 42;
 	zob_buffer_compare(p_first, p_second, &diff);
 	assert_that(diff, is_equal_to(0));
+	zob_buffer_dispose(&p_first);
 }
 
 Ensure(buffer, compare_different_buffers)
@@ -264,6 +270,8 @@ Ensure(buffer, compare_different_buffers)
 	zob_buffer_compare(p_first, p_second, &diff);
 	assert_that(diff, is_not_equal_to(0));
 	assert_that(diff, is_not_equal_to(42));
+	zob_buffer_dispose(&p_first);
+	zob_buffer_dispose(&p_second);
 }
 
 Ensure(buffer, compare_buffers_with_slice)
@@ -294,6 +302,8 @@ Ensure(buffer, compare_buffers_with_slice)
 	zob_buffer_compare(p_slice, p_alea, &diff);
 	assert_that(diff, is_equal_to(0));
 	assert_that(diff, is_not_equal_to(42));
+	zob_buffer_dispose(&p_alea);
+	zob_buffer_dispose(&p_original);
 }
 
 Ensure(buffer, compare_buffers_with_slice_from_middle)
@@ -324,6 +334,8 @@ Ensure(buffer, compare_buffers_with_slice_from_middle)
 	zob_buffer_compare(p_slice, p_jacta, &diff);
 	assert_that(diff, is_equal_to(0));
 	assert_that(diff, is_not_equal_to(42));
+	zob_buffer_dispose(&p_original);
+	zob_buffer_dispose(&p_jacta);
 }
 
 #if 0
