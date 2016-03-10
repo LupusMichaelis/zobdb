@@ -25,8 +25,24 @@ Ensure(buffer, create_empty)
 	struct zob_buffer * p_buffer = NULL;
 	zob_buffer_create(&p_buffer);
 	assert_that(p_buffer, is_not_equal_to(NULL));
-	size_t size = 0;
+	size_t size = -1;
+	zob_buffer_size_get(p_buffer, &size);
 	assert_that(size, is_equal_to(0));
+	zob_buffer_dispose(&p_buffer);
+	assert_that(p_buffer, is_equal_to(NULL));
+}
+
+Ensure(buffer, create_empty_ensure_size)
+{
+	struct zob_buffer * p_buffer = NULL;
+	zob_buffer_create(&p_buffer);
+	assert_that(p_buffer, is_not_equal_to(NULL));
+	size_t size = -1;
+	zob_buffer_size_get(p_buffer, &size);
+	assert_that(size, is_equal_to(0));
+	zob_buffer_ensure(p_buffer, 0, 10);
+	zob_buffer_size_get(p_buffer, &size);
+	assert_that(size, is_equal_to(10));
 	zob_buffer_dispose(&p_buffer);
 	assert_that(p_buffer, is_equal_to(NULL));
 }
@@ -39,7 +55,7 @@ Ensure(buffer, create_empty_and_assign_data)
 
 	char const * p_message = "Alea jacta est";
 	zob_buffer_set_is_auto(p_buffer, true);
-	size_t size = 0;
+	size_t size = -1;
 	zob_buffer_write(p_buffer, &size, 0, strlen(p_message), p_message);
 	assert_that(strlen(p_message), is_equal_to(size));
 
@@ -55,7 +71,7 @@ Ensure(buffer, create_empty_and_assign_data_then_reset)
 
 	char const * p_message = "Alea jacta est";
 	zob_buffer_set_is_auto(p_buffer, true);
-	size_t size = 0;
+	size_t size = -1;
 	zob_buffer_write(p_buffer, &size, 0, strlen(p_message), p_message);
 	assert_that(strlen(p_message), is_equal_to(size));
 
@@ -73,7 +89,7 @@ Ensure(buffer, create_empty_and_assign_data_and_search_for_char)
 
 	char const * p_message = "Alea jacta est";
 	zob_buffer_set_is_auto(p_buffer, true);
-	size_t size = 0;
+	size_t size = -1;
 	zob_buffer_write(p_buffer, &size, 0, strlen(p_message), p_message);
 	assert_that(strlen(p_message), is_equal_to(size));
 
@@ -96,7 +112,7 @@ Ensure(buffer, create_empty_and_assign_data_and_search_for_string)
 
 	char const * p_message = "Alea jacta est";
 	zob_buffer_set_is_auto(p_buffer, true);
-	size_t size = 0;
+	size_t size = -1;
 	zob_buffer_write(p_buffer, &size, 0, strlen(p_message), p_message);
 	assert_that(strlen(p_message), is_equal_to(size));
 
@@ -141,6 +157,35 @@ Ensure(buffer, create_empty_and_assign_data_and_search_for_string)
 	assert_that(p_buffer, is_equal_to(NULL));
 }
 
+Ensure(buffer, create_empty_and_assign_data_and_amend)
+{
+	struct zob_buffer * p_buffer = NULL;
+	zob_buffer_create(&p_buffer);
+	assert_that(p_buffer, is_not_equal_to(NULL));
+
+	char const * p_message = "My poney is blue";
+	zob_buffer_set_is_auto(p_buffer, true);
+	size_t size = -1;
+	zob_buffer_write(p_buffer, &size, 0, strlen(p_message), p_message);
+	assert_that(strlen(p_message), is_equal_to(size));
+
+	char const * p_green = "green";
+	zob_buffer_write(p_buffer, &size, strlen("My poney is "), strlen(p_green), p_green);
+	assert_that(strlen(p_green), is_equal_to(size));
+
+	struct zob_buffer * p_expected = NULL;
+	zob_buffer_create(&p_expected);
+	char const * p_expected_message = "My poney is green";
+	zob_buffer_set_is_auto(p_expected, true);
+	zob_buffer_write(p_expected, NULL, 0, strlen(p_expected_message), p_expected_message);
+	int diff = 42;
+	zob_buffer_compare(p_buffer, p_expected, &diff);
+	assert_that(diff, is_equal_to(0));
+
+	zob_buffer_dispose(&p_buffer);
+	assert_that(p_buffer, is_equal_to(NULL));
+}
+
 Ensure(buffer, create_and_assign_and_slice)
 {
 	struct zob_buffer * p_buffer = NULL;
@@ -149,7 +194,7 @@ Ensure(buffer, create_and_assign_and_slice)
 
 	char const * p_message = "Alea jacta est";
 	zob_buffer_set_is_auto(p_buffer, true);
-	size_t size = 0;
+	size_t size = -1;
 	zob_buffer_write(p_buffer, &size, 0, strlen(p_message), p_message);
 	assert_that(strlen(p_message), is_equal_to(size));
 
@@ -287,6 +332,7 @@ int main()
 	TestSuite * suite = create_test_suite();
 	/*
 	add_test_with_context(suite, buffer, create_empty);
+	add_test_with_context(suite, buffer, create_empty_ensure_size);
 	add_test_with_context(suite, buffer, create_empty_and_assign_data);
 	add_test_with_context(suite, buffer, create_empty_and_assign_data_then_reset);
 	add_test_with_context(suite, buffer, create_empty_and_assign_data_and_search_for_string);
@@ -294,12 +340,15 @@ int main()
 	add_test_with_context(suite, buffer, create_and_assign_and_slice);
 	add_test_with_context(suite, buffer, compare_cloned_buffers);
 	add_test_with_context(suite, buffer, compare_buffers_with_slice_from_middle);
+	add_test_with_context(suite, buffer, create_empty_and_assign_data_and_amend);
 	*/
 
 	run_test_suite(suite, create_text_reporter());
 	setup_reporting(create_text_reporter());
 
-	buffer__compare_buffers_with_slice_from_middle();
+/*	buffer__create_empty_ensure_size();*/
+/*	buffer__compare_buffers_with_slice_from_middle();*/
+	buffer__create_empty_and_assign_data_and_amend();
 
 	return EXIT_SUCCESS;
 }

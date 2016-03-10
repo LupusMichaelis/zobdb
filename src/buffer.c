@@ -106,6 +106,7 @@ void zob_buffer_ensure(struct zob_buffer * p_buffer, size_t position, size_t inp
 		zob_allocator_do_allocate(p_allocator, (void **) &p_buffer->p_begin, new_size * sizeof *p_buffer->p_begin);
 		if(p_auto)
 		{
+			memset(p_buffer->p_begin, 0, new_size * sizeof *p_buffer->p_begin);
 			memcpy(p_buffer->p_begin, p_auto, p_buffer->p_end - p_auto);
 			zob_allocator_do_release(p_allocator, (void **) &p_auto);
 		}
