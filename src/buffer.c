@@ -120,13 +120,12 @@ void zob_buffer_ensure(struct zob_buffer * p_buffer, size_t position, size_t inp
 		p_buffer->p_end = p_buffer->p_begin;
 
 	p_buffer->p_end += chunk_number * p_buffer->chunk_size;
-	p_buffer->size = position + input_size;
 }
 
 void zob_buffer_write(struct zob_buffer * p_buffer, size_t * p_written, size_t from, size_t length, const char * p_text)
 {
 	if(!p_buffer->is_auto)
-		length = MIN(length, p_buffer->size);
+		length = MIN(length, p_buffer->p_end - p_buffer->p_begin);
 
 	if(!length) zob_app_error(gp_app, "Empty write", __FILE__, __LINE__);
 
@@ -145,7 +144,7 @@ void zob_buffer_slice_get(struct zob_buffer * p_buffer, size_t from, size_t to, 
 {
 	zob_buffer_create(pp_slice);
 	zob_buffer_set_is_auto(*pp_slice, 1);
-	zob_buffer_ensure(*pp_slice, from, to - from);
+	zob_buffer_ensure(*pp_slice, 0, to - from);
 	zob_buffer_set_is_auto(*pp_slice, 0);
 	zob_buffer_write(*pp_slice, NULL, 0, to - from, p_buffer->p_begin + from);
 	zob_buffer_set_is_auto(*pp_slice, 1);

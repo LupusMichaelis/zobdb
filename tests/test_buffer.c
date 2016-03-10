@@ -42,7 +42,7 @@ Ensure(buffer, create_empty_ensure_size)
 	assert_that(size, is_equal_to(0));
 	zob_buffer_ensure(p_buffer, 0, 10);
 	zob_buffer_size_get(p_buffer, &size);
-	assert_that(size, is_equal_to(10));
+	assert_that(size, is_equal_to(0));
 	zob_buffer_dispose(&p_buffer);
 	assert_that(p_buffer, is_equal_to(NULL));
 }
