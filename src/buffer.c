@@ -193,6 +193,12 @@ void zob_buffer_get_data(struct zob_buffer * p_buffer, size_t first, size_t last
 	*pp_string = p_string;
 }
 
+void zob_buffer_size_set(struct zob_buffer * p_buffer, size_t size)
+{
+	zob_buffer_ensure(p_buffer, 0, size);
+	p_buffer->size = size;
+}
+
 void zob_buffer_size_get(struct zob_buffer * p_buffer, size_t * p_size)
 {
 	*p_size = p_buffer->size;

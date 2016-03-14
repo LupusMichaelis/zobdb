@@ -47,6 +47,21 @@ Ensure(buffer, create_empty_ensure_size)
 	assert_that(p_buffer, is_equal_to(NULL));
 }
 
+Ensure(buffer, create_empty_set_size)
+{
+	struct zob_buffer * p_buffer = NULL;
+	zob_buffer_create(&p_buffer);
+	assert_that(p_buffer, is_not_equal_to(NULL));
+	size_t size = -1;
+	zob_buffer_size_get(p_buffer, &size);
+	assert_that(size, is_equal_to(0));
+	zob_buffer_size_set(p_buffer, 10);
+	zob_buffer_size_get(p_buffer, &size);
+	assert_that(size, is_equal_to(10));
+	zob_buffer_dispose(&p_buffer);
+	assert_that(p_buffer, is_equal_to(NULL));
+}
+
 Ensure(buffer, create_empty_and_assign_data)
 {
 	struct zob_buffer * p_buffer = NULL;

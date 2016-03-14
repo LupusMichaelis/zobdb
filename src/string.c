@@ -55,9 +55,9 @@ void zob_string_copy(struct zob_string * p_from, struct zob_string * p_to)
 	zob_buffer_copy(p_from->p_buffer, p_to->p_buffer);
 }
 
-void zob_string_ensure(struct zob_string * p_string, size_t from, size_t input_size)
+void zob_string_size_set(struct zob_string * p_string, size_t input_size)
 {
-	zob_buffer_ensure(p_string->p_buffer, from, input_size);
+	zob_buffer_size_set(p_string->p_buffer, input_size);
 }
 
 void zob_string_write(struct zob_string * p_string, size_t * p_from, const char * p_text)
