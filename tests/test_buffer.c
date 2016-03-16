@@ -69,14 +69,27 @@ Ensure(buffer, create_empty_and_assign_data)
 	assert_that(p_buffer, is_not_equal_to(NULL));
 
 	char const * p_message = "Alea jacta est";
-	zob_buffer_set_is_auto(p_buffer, true);
+	zob_buffer_is_auto_set(p_buffer, true);
 	size_t size = -1;
-	zob_buffer_write(p_buffer, &size, 0, strlen(p_message), p_message);
+	zob_buffer_write(p_buffer, 0, strlen(p_message), p_message, &size);
 	assert_that(strlen(p_message), is_equal_to(size));
 
 	zob_buffer_dispose(&p_buffer);
 	assert_that(p_buffer, is_equal_to(NULL));
 }
+
+/*
+Ensure(buffer, create_with_data)
+{
+	struct zob_buffer * p_buffer = NULL;
+	char * p_message = "Direct content";
+	zob_string_create_from_cstring(&p_buffer, p_message);
+
+	size_t size = -1;
+	zob_string_size_get(p_buffer, &size);
+	assert_that(strlen(p_message), is_equal_to(size));
+}
+*/
 
 Ensure(buffer, create_empty_and_assign_data_then_reset)
 {
@@ -85,9 +98,9 @@ Ensure(buffer, create_empty_and_assign_data_then_reset)
 	assert_that(p_buffer, is_not_equal_to(NULL));
 
 	char const * p_message = "Alea jacta est";
-	zob_buffer_set_is_auto(p_buffer, true);
+	zob_buffer_is_auto_set(p_buffer, true);
 	size_t size = -1;
-	zob_buffer_write(p_buffer, &size, 0, strlen(p_message), p_message);
+	zob_buffer_write(p_buffer, 0, strlen(p_message), p_message, &size);
 	assert_that(strlen(p_message), is_equal_to(size));
 
 	zob_buffer_fill(p_buffer, 1024, '\0');
@@ -103,9 +116,9 @@ Ensure(buffer, create_empty_and_assign_data_and_search_for_char)
 	assert_that(p_buffer, is_not_equal_to(NULL));
 
 	char const * p_message = "Alea jacta est";
-	zob_buffer_set_is_auto(p_buffer, true);
+	zob_buffer_is_auto_set(p_buffer, true);
 	size_t size = -1;
-	zob_buffer_write(p_buffer, &size, 0, strlen(p_message), p_message);
+	zob_buffer_write(p_buffer, 0, strlen(p_message), p_message, &size);
 	assert_that(strlen(p_message), is_equal_to(size));
 
 	size_t position = 0;
@@ -126,9 +139,9 @@ Ensure(buffer, create_empty_and_assign_data_and_search_for_string)
 	assert_that(p_buffer, is_not_equal_to(NULL));
 
 	char const * p_message = "Alea jacta est";
-	zob_buffer_set_is_auto(p_buffer, true);
+	zob_buffer_is_auto_set(p_buffer, true);
 	size_t size = -1;
-	zob_buffer_write(p_buffer, &size, 0, strlen(p_message), p_message);
+	zob_buffer_write(p_buffer, 0, strlen(p_message), p_message, &size);
 	assert_that(strlen(p_message), is_equal_to(size));
 
 	size_t position = 0;
@@ -179,20 +192,20 @@ Ensure(buffer, create_empty_and_assign_data_and_amend)
 	assert_that(p_buffer, is_not_equal_to(NULL));
 
 	char const * p_message = "My poney is blue";
-	zob_buffer_set_is_auto(p_buffer, true);
+	zob_buffer_is_auto_set(p_buffer, true);
 	size_t size = -1;
-	zob_buffer_write(p_buffer, &size, 0, strlen(p_message), p_message);
+	zob_buffer_write(p_buffer, 0, strlen(p_message), p_message, &size);
 	assert_that(strlen(p_message), is_equal_to(size));
 
 	char const * p_green = "green";
-	zob_buffer_write(p_buffer, &size, strlen("My poney is "), strlen(p_green), p_green);
+	zob_buffer_write(p_buffer, strlen("My poney is "), strlen(p_green), p_green, &size);
 	assert_that(strlen(p_green), is_equal_to(size));
 
 	struct zob_buffer * p_expected = NULL;
 	zob_buffer_create(&p_expected);
 	char const * p_expected_message = "My poney is green";
-	zob_buffer_set_is_auto(p_expected, true);
-	zob_buffer_write(p_expected, NULL, 0, strlen(p_expected_message), p_expected_message);
+	zob_buffer_is_auto_set(p_expected, true);
+	zob_buffer_write(p_expected, 0, strlen(p_expected_message), p_expected_message, &size);
 	int diff = 42;
 	zob_buffer_compare(p_buffer, p_expected, &diff);
 	assert_that(diff, is_equal_to(0));
@@ -210,9 +223,9 @@ Ensure(buffer, create_and_assign_and_slice)
 	assert_that(p_buffer, is_not_equal_to(NULL));
 
 	char const * p_message = "Alea jacta est";
-	zob_buffer_set_is_auto(p_buffer, true);
+	zob_buffer_is_auto_set(p_buffer, true);
 	size_t size = -1;
-	zob_buffer_write(p_buffer, &size, 0, strlen(p_message), p_message);
+	zob_buffer_write(p_buffer, 0, strlen(p_message), p_message, &size);
 	assert_that(strlen(p_message), is_equal_to(size));
 
 	struct zob_buffer * p_slice = NULL;
@@ -230,13 +243,13 @@ Ensure(buffer, compare_created_buffers)
 	assert_that(p_first, is_not_equal_to(NULL));
 
 	char const * p_message = "Alea jacta est";
-	zob_buffer_set_is_auto(p_first, true);
-	zob_buffer_write(p_first, NULL, 0, strlen(p_message), p_message);
+	zob_buffer_is_auto_set(p_first, true);
+	zob_buffer_write(p_first, 0, strlen(p_message), p_message, NULL);
 
 	struct zob_buffer * p_second = NULL;
 	zob_buffer_create(&p_second);
-	zob_buffer_set_is_auto(p_second, true);
-	zob_buffer_write(p_second, NULL, 0, strlen(p_message), p_message);
+	zob_buffer_is_auto_set(p_second, true);
+	zob_buffer_write(p_second, 0, strlen(p_message), p_message, NULL);
 
 	int diff = 42;
 	zob_buffer_compare(p_first, p_second, &diff);
@@ -252,8 +265,8 @@ Ensure(buffer, compare_cloned_buffers)
 	assert_that(p_first, is_not_equal_to(NULL));
 
 	char const * p_message = "Alea jacta est";
-	zob_buffer_set_is_auto(p_first, true);
-	zob_buffer_write(p_first, NULL, 0, strlen(p_message), p_message);
+	zob_buffer_is_auto_set(p_first, true);
+	zob_buffer_write(p_first, 0, strlen(p_message), p_message, NULL);
 
 	struct zob_buffer * p_second = NULL;
 	zob_buffer_clone(p_first, &p_second);
@@ -271,15 +284,15 @@ Ensure(buffer, compare_different_buffers)
 	assert_that(p_first, is_not_equal_to(NULL));
 
 	char const * p_first_message = "Alea jacta est";
-	zob_buffer_set_is_auto(p_first, true);
-	zob_buffer_write(p_first, NULL, 0, strlen(p_first_message), p_first_message);
+	zob_buffer_is_auto_set(p_first, true);
+	zob_buffer_write(p_first, 0, strlen(p_first_message), p_first_message, NULL);
 
 	struct zob_buffer * p_second = NULL;
 	zob_buffer_create(&p_second);
 
 	char const * p_second_message = "Cogito ergo sum";
-	zob_buffer_set_is_auto(p_second, true);
-	zob_buffer_write(p_second, NULL, 0, strlen(p_second_message), p_second_message);
+	zob_buffer_is_auto_set(p_second, true);
+	zob_buffer_write(p_second, 0, strlen(p_second_message), p_second_message, NULL);
 
 	int diff = 42;
 	zob_buffer_compare(p_first, p_second, &diff);
@@ -296,15 +309,15 @@ Ensure(buffer, compare_buffers_with_slice)
 	assert_that(p_original, is_not_equal_to(NULL));
 
 	char const * p_original_message = "Alea jacta est";
-	zob_buffer_set_is_auto(p_original, true);
-	zob_buffer_write(p_original, NULL, 0, strlen(p_original_message), p_original_message);
+	zob_buffer_is_auto_set(p_original, true);
+	zob_buffer_write(p_original, 0, strlen(p_original_message), p_original_message, NULL);
 
 	struct zob_buffer * p_alea = NULL;
 	zob_buffer_create(&p_alea);
 
 	char const * p_alea_message = "Alea";
-	zob_buffer_set_is_auto(p_alea, true);
-	zob_buffer_write(p_alea, NULL, 0, strlen(p_alea_message), p_alea_message);
+	zob_buffer_is_auto_set(p_alea, true);
+	zob_buffer_write(p_alea, 0, strlen(p_alea_message), p_alea_message, NULL);
 
 	int diff = 42;
 	zob_buffer_compare(p_original, p_alea, &diff);
@@ -328,15 +341,15 @@ Ensure(buffer, compare_buffers_with_slice_from_middle)
 	assert_that(p_original, is_not_equal_to(NULL));
 
 	char const * p_original_message = "Alea jacta est";
-	zob_buffer_set_is_auto(p_original, true);
-	zob_buffer_write(p_original, NULL, 0, strlen(p_original_message), p_original_message);
+	zob_buffer_is_auto_set(p_original, true);
+	zob_buffer_write(p_original, 0, strlen(p_original_message), p_original_message, NULL);
 
 	struct zob_buffer * p_jacta = NULL;
 	zob_buffer_create(&p_jacta);
 
 	char const * p_jacta_message = "jacta";
-	zob_buffer_set_is_auto(p_jacta, true);
-	zob_buffer_write(p_jacta, NULL, 0, strlen(p_jacta_message), p_jacta_message);
+	zob_buffer_is_auto_set(p_jacta, true);
+	zob_buffer_write(p_jacta, 0, strlen(p_jacta_message), p_jacta_message, NULL);
 
 	int diff = 42;
 	zob_buffer_compare(p_original, p_jacta, &diff);

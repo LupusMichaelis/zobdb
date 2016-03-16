@@ -17,11 +17,18 @@ void zob_string_vector_copy(struct zob_string ** p_from, struct zob_string ** p_
 void zob_string_create(struct zob_string ** pp_string);
 void zob_string_init(struct zob_string * p_string);
 
-void zob_string_set(struct zob_string * p_string, char * p_data, int options);
+void zob_string_create_from_cstring(struct zob_string ** pp_string, char * p_raw);
+
+void zob_string_compare(struct zob_string * p_lhs, struct zob_string * p_rhs, int * p_diff);
+
+void zob_string_set(struct zob_string * p_string, char * p_data);
 void zob_string_set_options(struct zob_string * p_string, char * p_data);
 
+void zob_string_size_set(struct zob_string * p_string, size_t size);
+void zob_string_size_get(struct zob_string * p_string, size_t * p_size);
+
 void zob_string_get(struct zob_string * p_string, char ** pp_text);
-void zob_string_get_data(struct zob_string * p_string, size_t first, size_t last, char ** p_datas);
+void zob_string_slice_get(struct zob_string * p_string, size_t first, size_t last, struct zob_string ** p_slice);
 
 void zob_string_clone(struct zob_string * p_string, struct zob_string ** pp_string);
 void zob_string_copy(struct zob_string * p_from, struct zob_string * p_to);
@@ -29,8 +36,7 @@ void zob_string_copy(struct zob_string * p_from, struct zob_string * p_to);
 void zob_string_clean(struct zob_string * p_string, bool has_to_dispose);
 void zob_string_dispose(struct zob_string ** pp_string);
 
-void zob_string_ensure(struct zob_string * p_string, size_t from, size_t input_size);
-void zob_string_write(struct zob_string * p_string, size_t * p_from, const char * p_text);
+void zob_string_write(struct zob_string * p_string, size_t from, const char * p_text, size_t * p_written);
 
 void zob_string_find_char(
 		struct zob_string * p_string,

@@ -57,17 +57,15 @@ void zob_buffer_copy(struct zob_buffer * p_from, struct zob_buffer * p_to)
 {
 	p_to->chunk_size = p_from->chunk_size;
 
-	struct zob_allocator * p_allocator = NULL;
-	zob_app_allocator_get(gp_app, &p_allocator);
-	zob_allocator_do_allocate(p_allocator, (void **)&p_to->p_begin, (p_from->p_end - p_from->p_begin) * sizeof *p_to->p_begin);
-	memcpy(p_to->p_begin, p_from->p_begin, p_from->p_end - p_from->p_begin);
-
 	size_t buffer_size = 0;
 	zob_buffer_size_get(p_from, &buffer_size);
-	p_to->size = buffer_size;
+	zob_buffer_is_auto_set(p_to, true);
+	zob_buffer_size_set(p_to, p_from->size);
+	memcpy(p_to->p_begin, p_from->p_begin, p_from->size);
+	zob_buffer_is_auto_set(p_to, p_from->is_auto);
 }
 
-void zob_buffer_set_is_auto(struct zob_buffer * p_buffer, bool is_auto)
+void zob_buffer_is_auto_set(struct zob_buffer * p_buffer, bool is_auto)
 {
 	p_buffer->is_auto = is_auto;
 }
@@ -122,7 +120,7 @@ void zob_buffer_ensure(struct zob_buffer * p_buffer, size_t position, size_t inp
 	p_buffer->p_end += chunk_number * p_buffer->chunk_size;
 }
 
-void zob_buffer_write(struct zob_buffer * p_buffer, size_t * p_written, size_t from, size_t length, const char * p_text)
+void zob_buffer_write(struct zob_buffer * p_buffer, size_t from, size_t length, const char * p_text, size_t * p_written)
 {
 	if(!p_buffer->is_auto)
 		length = MIN(length, p_buffer->p_end - p_buffer->p_begin);
@@ -143,11 +141,11 @@ void zob_buffer_write(struct zob_buffer * p_buffer, size_t * p_written, size_t f
 void zob_buffer_slice_get(struct zob_buffer * p_buffer, size_t from, size_t to, struct zob_buffer ** pp_slice)
 {
 	zob_buffer_create(pp_slice);
-	zob_buffer_set_is_auto(*pp_slice, 1);
+	zob_buffer_is_auto_set(*pp_slice, 1);
 	zob_buffer_ensure(*pp_slice, 0, to - from);
-	zob_buffer_set_is_auto(*pp_slice, 0);
-	zob_buffer_write(*pp_slice, NULL, 0, to - from, p_buffer->p_begin + from);
-	zob_buffer_set_is_auto(*pp_slice, 1);
+	zob_buffer_is_auto_set(*pp_slice, 0);
+	zob_buffer_write(*pp_slice, 0, to - from, p_buffer->p_begin + from, NULL);
+	zob_buffer_is_auto_set(*pp_slice, 1);
 }
 
 void zob_buffer_compare(struct zob_buffer * p_lhs, struct zob_buffer * p_rhs, int * p_diff)

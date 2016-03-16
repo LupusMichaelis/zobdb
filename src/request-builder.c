@@ -110,7 +110,7 @@ void zob_request_builder_parse(
 		bool * p_need_moar
 		)
 {
-	zob_string_write(p_rb->p_buffer, &p_rb->last, p_text);
+	zob_string_write(p_rb->p_buffer, 0, p_text, &p_rb->last);
 
 	do
 	{
@@ -212,12 +212,16 @@ void zob_request_builder_parse_header(struct zob_request_builder * p_rb)
 	if(!has_found)
 		return; // We don't have enough data to take a decision
 
-	zob_message_set_verb(p_rb->p_request, gpc_verbs[p_rb->verb]);
+	struct zob_string * p_verb = NULL;
+	zob_string_create(&p_verb);
+	zob_string_set(p_verb, gpc_verbs[p_rb->verb]);
+	zob_message_verb_set(p_rb->p_request, p_verb);
 
 	size_t word_separator = 0;
-	char * p_key = NULL;
-	zob_string_get_data(p_rb->p_buffer, p_rb->first, line_feed, &p_key);
-	zob_message_set_key(p_rb->p_request, p_key);
+	struct zob_string * p_key = NULL;
+	zob_string_slice_get(p_rb->p_buffer, p_rb->first, line_feed, &p_key);
+	zob_message_key_set(p_rb->p_request, p_key);
+	zob_string_dispose(&p_key);
 
 	p_rb->first = has_found ? word_separator : line_feed;
 	++p_rb->first;
@@ -242,17 +246,19 @@ void zob_request_builder_parse_new(struct zob_request_builder * p_rb)
 		return;
 	}
 
-	zob_message_set_verb(p_rb->p_request, gpc_verbs[p_rb->verb]);
+	struct zob_string * p_verb = NULL;
+	zob_string_create_from_cstring(&p_verb, gpc_verbs[p_rb->verb]);
+	zob_message_verb_set(p_rb->p_request, p_verb);
+	zob_string_dispose(&p_verb);
 
-	char * p_word = NULL;
+	struct zob_string * p_word = NULL;
+	zob_string_slice_get(p_rb->p_buffer, p_rb->first, word_separator, &p_word);
+	zob_message_key_set(p_rb->p_request, p_word);
+	zob_string_dispose(&p_word);
 
-	zob_string_get_data(p_rb->p_buffer, p_rb->first, word_separator, &p_word);
-	zob_message_set_key(p_rb->p_request, p_word);
-	free(p_word);
-
-	zob_string_get_data(p_rb->p_buffer, word_separator + 1, line_feed, &p_word);
-	zob_message_set_payload(p_rb->p_request, p_word);
-	free(p_word);
+	zob_string_slice_get(p_rb->p_buffer, word_separator + 1, line_feed, &p_word);
+	zob_message_payload_set(p_rb->p_request, p_word);
+	zob_string_dispose(&p_word);
 
 	p_rb->need_moar = false;
 }
@@ -277,13 +283,16 @@ void zob_request_builder_parse_delete(struct zob_request_builder * p_rb)
 	zob_string_find_char(p_rb->p_buffer, '\n', p_rb->first, p_rb->last, &line_feed, &has_found);
 	assert(has_found);
 
-	char * p_word = NULL;
+	struct zob_string * p_word = NULL;
+	zob_string_slice_get(p_rb->p_buffer, p_rb->first, line_feed, &p_word);
+	zob_message_key_set(p_rb->p_request, p_word);
+	zob_string_dispose(&p_word);
 
-	zob_string_get_data(p_rb->p_buffer, p_rb->first, line_feed, &p_word);
-	zob_message_set_key(p_rb->p_request, p_word);
-	free(p_word);
+	struct zob_string * p_verb = NULL;
+	zob_string_create_from_cstring(&p_verb, gpc_verbs[p_rb->verb]);
+	zob_message_verb_set(p_rb->p_request, p_verb);
+	zob_string_dispose(&p_verb);
 
-	zob_message_set_verb(p_rb->p_request, gpc_verbs[p_rb->verb]);
 	p_rb->is_bad_request = false;
 	p_rb->need_moar = false;
 }

@@ -13,7 +13,7 @@ struct zob_app;
 void zob_buffer_create(struct zob_buffer ** pp_buffer);
 void zob_buffer_init(struct zob_buffer * p_buffer);
 
-void zob_buffer_set_is_auto(struct zob_buffer * p_buffer, bool is_auto);
+void zob_buffer_is_auto_set(struct zob_buffer * p_buffer, bool is_auto);
 
 void zob_buffer_get(struct zob_buffer * p_buffer, char ** pp_text);
 void zob_buffer_get_data(struct zob_buffer * p_buffer, size_t first, size_t last, char ** p_string);
@@ -25,7 +25,7 @@ void zob_buffer_clean(struct zob_buffer * p_buffer, bool has_to_dispose);
 void zob_buffer_dispose(struct zob_buffer ** pp_buffer);
 
 void zob_buffer_ensure(struct zob_buffer * p_buffer, size_t from, size_t input_size);
-void zob_buffer_write(struct zob_buffer * p_buffer, size_t * p_written, size_t from, size_t length, const char * p_text);
+void zob_buffer_write(struct zob_buffer * p_buffer, size_t from, size_t length, const char * p_text, size_t * p_written);
 
 void zob_buffer_size_set(struct zob_buffer * p_buffer, size_t size);
 void zob_buffer_size_get(struct zob_buffer * p_buffer, size_t * p_size);

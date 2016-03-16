@@ -38,7 +38,13 @@ APP_DISPOSE(string)
 void zob_string_init(struct zob_string * p_string)
 {
 	zob_buffer_create(&p_string->p_buffer);
-	zob_buffer_set_is_auto(p_string->p_buffer, true);
+	zob_buffer_is_auto_set(p_string->p_buffer, true);
+}
+
+void zob_string_create_from_cstring(struct zob_string ** pp_string, char * p_raw)
+{
+	zob_string_create(pp_string);
+	zob_string_write(*pp_string, 0, p_raw, NULL);
 }
 
 void zob_string_clean(struct zob_string * p_string, bool has_to_dispose)
@@ -55,14 +61,30 @@ void zob_string_copy(struct zob_string * p_from, struct zob_string * p_to)
 	zob_buffer_copy(p_from->p_buffer, p_to->p_buffer);
 }
 
+void zob_string_compare(struct zob_string * p_lhs, struct zob_string * p_rhs, int * p_diff)
+{
+	zob_buffer_compare(p_lhs->p_buffer, p_rhs->p_buffer, p_diff);
+}
+
 void zob_string_size_set(struct zob_string * p_string, size_t input_size)
 {
 	zob_buffer_size_set(p_string->p_buffer, input_size);
 }
 
-void zob_string_write(struct zob_string * p_string, size_t * p_from, const char * p_text)
+void zob_string_size_get(struct zob_string * p_string, size_t * p_input_size)
 {
-	zob_buffer_write(p_string->p_buffer, p_from, *p_from, strlen(p_text), p_text);
+	zob_buffer_size_get(p_string->p_buffer, p_input_size);
+}
+
+void zob_string_write(struct zob_string * p_string, size_t from, const char * p_text, size_t * p_written)
+{
+	zob_buffer_write(p_string->p_buffer, from, strlen(p_text), p_text, p_written);
+}
+
+void zob_string_set(struct zob_string * p_string, char * p_text)
+{
+	size_t length = strlen(p_text);
+	zob_string_write(p_string, 0, p_text, &length);
 }
 
 void zob_string_get(struct zob_string * p_string, char ** pp_text)
@@ -70,10 +92,13 @@ void zob_string_get(struct zob_string * p_string, char ** pp_text)
 	zob_buffer_get(p_string->p_buffer, pp_text);
 }
 
-void zob_string_get_data(struct zob_string * p_string, size_t first, size_t last, char ** pp_data)
+void zob_string_slice_get(struct zob_string * p_string, size_t first, size_t last, struct zob_string ** pp_slice)
 {
-	// XXX memory leak!!!
-	zob_buffer_get_data(p_string->p_buffer, first, last, pp_data);
+	struct zob_buffer * p_slice = NULL;
+	zob_buffer_slice_get(p_string->p_buffer, first, last, &p_slice);
+
+	zob_string_create(pp_slice);
+	(*pp_slice)->p_buffer = p_slice;
 }
 
 void zob_string_find_char(

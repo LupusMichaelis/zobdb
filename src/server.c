@@ -17,6 +17,7 @@
 #include "message.h"
 #include "object.h"
 #include "log.h"
+#include "string.h"
 
 struct zob_app;
 struct zob_store;
@@ -97,8 +98,17 @@ int zob_server_run(struct zob_server * p_server)
 		if(is_parse_error)
 		{
 			zob_message_create(&p_answer);
-			zob_message_set_verb(p_answer, "KO");
-			zob_message_set_payload(p_answer, "Parse error");
+
+			struct zob_string * p_verb = NULL;
+			zob_string_create(&p_verb);
+			zob_string_write(p_verb, 0, "KO", NULL);
+			zob_message_verb_set(p_answer, p_verb);
+
+			struct zob_string * p_message = NULL;
+			zob_string_create(&p_message);
+			zob_string_write(p_message, 0, "Parse error", NULL);
+			zob_message_payload_set(p_answer, p_message);
+
 			zob_server_answer(p_server, p_answer);
 		}
 		else
@@ -126,63 +136,115 @@ int zob_server_run(struct zob_server * p_server)
 
 void zob_server_process(struct zob_server * p_server, struct zob_message * p_request, struct zob_message * p_answer)
 {
-	const char * p_verb = NULL;
-	char * p_key = NULL, * p_payload = NULL;
-	zob_message_get_verb(p_request, (char **) &p_verb);
-	zob_message_get_key(p_request, (char **) &p_key);
+	struct zob_string * p_verb = NULL
+		, * p_key = NULL
+		, * p_payload = NULL
+		, * p_message = NULL;
+	zob_string_create(&p_verb);
+	zob_string_create(&p_key);
+	zob_string_create(&p_payload);
+	zob_message_verb_get(p_request, p_verb);
+	zob_message_key_get(p_request, p_key);
 
-	if(0 == strcmp("read", p_verb))
+	char * p_raw_key = NULL;
+	zob_string_get(p_key, &p_raw_key);
+
+	int diff = 0;
+	struct zob_string * p_verb_candidate = NULL;
+
+	zob_string_create_from_cstring(&p_verb_candidate, VERB_READ);
+	zob_string_compare(p_verb, p_verb_candidate, &diff);
+	if(0 == diff)
 	{
 		bool has_found = false;
-		zob_store_read(p_server->p_store, p_key, &p_payload, &has_found);
+		zob_store_read(p_server->p_store, p_key, p_payload, &has_found);
 		if(has_found)
 		{
 			char answer[100];
-			snprintf(answer, sizeof answer / sizeof answer[0] - 1 , "Ok %s", p_payload);
-			free(p_payload);
-			zob_message_set_payload(p_answer, answer);
+			char * p_raw_payload = NULL;
+			zob_string_get(p_payload, &p_raw_payload);
+			size_t raw_size = 0;
+			zob_string_size_get(p_payload, &raw_size);
+			snprintf(answer, MIN(sizeof answer / sizeof answer[0] - 1, raw_size + 1 + 3) , "Ok %s", p_raw_payload);
+			zob_string_create_from_cstring(&p_message, answer);
 		}
 		else
-			zob_message_set_payload(p_answer, "Ko\nNot Found");
+			zob_string_create_from_cstring(&p_message, "Ko\nNot Found");
 
+		zob_app_log(gp_app, p_raw_key, __FILE__, __LINE__);
+
+		goto cleanup;
 	}
-	else if(0 == strcmp("new", p_verb) || 0 == strcmp("update", p_verb))
+
+	zob_string_write(p_verb_candidate, 0, VERB_UPDATE, NULL);
+	zob_string_compare(p_verb, p_verb_candidate, &diff);
+	if(0 == diff)
 	{
 		bool is_ok = false;
-		bool is_overwrite = 0 == strcmp("update", p_verb);
+		bool is_overwrite = true;
 
-		zob_message_get_payload(p_request, &p_payload);
+		zob_message_payload_get(p_request, p_payload);
 		zob_store_write(p_server->p_store, p_key, p_payload, is_overwrite, &is_ok);
-		free(p_payload);
 
-		zob_app_log(gp_app, p_key, __FILE__, __LINE__);
+		zob_app_log(gp_app, p_raw_key, __FILE__, __LINE__);
 
+		zob_string_create_from_cstring(&p_message, "Ko");
 		if(is_ok)
-			zob_message_set_payload(p_answer, "Ok");
-		else
-			zob_message_set_payload(p_answer, "Ko");
+			zob_string_write(p_message, 0, "Ok", NULL);
+
+		goto cleanup;
 	}
-	else if(0 == strcmp("delete", p_verb))
+
+	zob_string_write(p_verb_candidate, 0, VERB_NEW, NULL);
+	zob_string_compare(p_verb, p_verb_candidate, &diff);
+	if(0 == diff)
+	{
+		bool is_ok = false;
+		bool is_overwrite = false;
+
+		zob_message_payload_get(p_request, p_payload);
+		zob_store_write(p_server->p_store, p_key, p_payload, is_overwrite, &is_ok);
+
+		zob_app_log(gp_app, p_raw_key, __FILE__, __LINE__);
+
+		zob_string_create_from_cstring(&p_message, "Ko");
+		if(is_ok)
+			zob_string_write(p_message, 0, "Ok", NULL);
+
+		goto cleanup;
+	}
+
+	zob_string_write(p_verb_candidate, 0, VERB_DELETE, NULL);
+	zob_string_compare(p_verb, p_verb_candidate, &diff);
+	if(0 == diff)
 	{
 		bool is_ok = false;
 
-		zob_message_get_payload(p_request, &p_payload);
+		zob_message_payload_get(p_request, p_payload);
 		zob_store_delete(p_server->p_store, p_key, &is_ok);
 
-		zob_app_log(gp_app, p_key, __FILE__, __LINE__);
+		zob_app_log(gp_app, p_raw_key, __FILE__, __LINE__);
 
+		zob_string_create_from_cstring(&p_message, "Ko");
 		if(is_ok)
-			zob_message_set_payload(p_answer, "Ok");
-		else
-			zob_message_set_payload(p_answer, "Ko");
-	}
-	else if(0 == strcmp("stop", p_verb))
-	{
-		zob_message_set_payload(p_answer, "Ok");
-		p_server->is_running = false;
+			zob_string_write(p_message, 0, "Ok", NULL);
+
+		goto cleanup;
 	}
 
-	free(p_key);
+	zob_string_write(p_verb_candidate, 0, VERB_STOP, NULL);
+	zob_string_compare(p_verb, p_verb_candidate, &diff);
+	if(0 == diff)
+	{
+		p_server->is_running = false;
+		goto cleanup;
+	}
+
+cleanup:
+	zob_message_payload_set(p_answer, p_message);
+	zob_string_dispose(&p_payload);
+	zob_string_dispose(&p_message);
+	zob_string_dispose(&p_verb_candidate);
 }
 
 void zob_server_listen(struct zob_server * p_server, const char * socket_path)
@@ -211,8 +273,6 @@ void zob_server_session_end(struct zob_server * p_server)
 	close(p_server->session_fd);
 }
 
-#define min(l, r) (((l) > (r)) ? (r) : (l))
-
 void zob_server_read(struct zob_server * p_server, char **pp_payload)
 {
 	char * p_payload = NULL;
@@ -229,10 +289,10 @@ void zob_server_read(struct zob_server * p_server, char **pp_payload)
 		if(0 == reading_count)
 			break;
 
-		payload_size += min(DB_BUFFER_SIZE, reading_count);
+		payload_size += MIN(DB_BUFFER_SIZE, reading_count);
 		p_payload = realloc(p_payload, (payload_size + 1) * sizeof *p_payload);
 		CHECK_NULL(p_payload);
-		strncat(p_payload, p_server->buffer, min(DB_BUFFER_SIZE, reading_count));
+		strncat(p_payload, p_server->buffer, MIN(DB_BUFFER_SIZE, reading_count));
 
 	} while(reading_count > DB_BUFFER_SIZE);
 
@@ -241,19 +301,27 @@ void zob_server_read(struct zob_server * p_server, char **pp_payload)
 
 void zob_server_answer(struct zob_server * p_server, struct zob_message * p_answer)
 {
-	char * p_verb = NULL, * p_payload = NULL;
-	zob_message_get_verb(p_answer, &p_verb);
-	zob_message_get_payload(p_answer, &p_payload);
+	struct zob_string * p_verb = NULL, * p_payload = NULL;
+	zob_string_create(&p_verb);
+	zob_message_verb_get(p_answer, p_verb);
+	zob_string_create(&p_payload);
+	zob_message_payload_get(p_answer, p_payload);
 
 	if(!p_payload ||!p_verb)
 		zob_app_error(gp_app, "Malformed answer", __FILE__, __LINE__);
 
+	char * p_message = NULL;
+	zob_string_get(p_payload, &p_message);
+	size_t message_size = 0;
+	zob_string_size_get(p_payload, &message_size);
 	char buffer[1024];
-	int write_count = snprintf(buffer, sizeof buffer / sizeof buffer[0] - 1, p_payload);
+	memset(buffer, 0, 1024);
+	int write_count = snprintf(buffer, MIN(message_size + 1, sizeof buffer / sizeof buffer[0] - 1), p_message);
 	CHECK_INT(write_count);
 
-	int written = write(p_server->session_fd, buffer, min(write_count, 1024 - 1));
+	int written = write(p_server->session_fd, buffer, MIN(write_count, 1024 - 1));
 	CHECK_INT(written);
 
-	free(p_payload);
+	zob_string_dispose(&p_verb);
+	zob_string_dispose(&p_payload);
 }

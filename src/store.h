@@ -3,6 +3,7 @@
 
 struct zob_app;
 struct zob_store;
+struct zob_string;
 
 #	include <stdbool.h>
 
@@ -17,18 +18,18 @@ void zob_store_dispose(struct zob_store ** pp_store);
 void zob_store_open(struct zob_store * p_store, const char * filename);
 void zob_store_read(
 		struct zob_store * p_store,
-		const char * p_key,
-		char ** pp_value,
-		bool * is_ok);
+		struct zob_string * p_key,
+		struct zob_string * p_value,
+		bool * p_is_ok);
 void zob_store_write(
 		struct zob_store * p_store,
-		const char * p_key,
-		const char * p_value,
+		struct zob_string * p_key,
+		struct zob_string * p_value,
 		bool is_overwrite,
 		bool * p_is_ok);
 void zob_store_delete(
 		struct zob_store * p_store,
-		const char * p_key,
-		bool * is_ok);
+		struct zob_string * p_key,
+		bool * p_is_ok);
 
 #endif // H_ZOB_STORE
