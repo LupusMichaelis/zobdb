@@ -24,10 +24,8 @@ APP_VECTOR_CLEAN(string)
 
 void zob_vector_string_copy(struct zob_string ** p_from, struct zob_string ** p_to)
 {
-	do
-	{
-		zob_string_copy(*p_from, *p_to);
-	} while(++p_from && ++p_to);
+	do zob_string_copy(*p_from, *p_to);
+	while(++p_from && ++p_to);
 }
 
 APP_ALLOC(string)
@@ -44,7 +42,7 @@ void zob_string_init(struct zob_string * p_string)
 void zob_string_create_from_cstring(struct zob_string ** pp_string, char * p_raw)
 {
 	zob_string_create(pp_string);
-	zob_string_write(*pp_string, 0, p_raw, NULL);
+	zob_string_set(*pp_string, p_raw);
 }
 
 void zob_string_clean(struct zob_string * p_string, bool has_to_dispose)
@@ -85,6 +83,7 @@ void zob_string_set(struct zob_string * p_string, char * p_text)
 {
 	size_t length = strlen(p_text);
 	zob_string_write(p_string, 0, p_text, &length);
+	zob_buffer_size_set(p_string->p_buffer, length);
 }
 
 void zob_string_get(struct zob_string * p_string, char ** pp_text)
