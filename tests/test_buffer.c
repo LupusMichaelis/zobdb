@@ -216,6 +216,37 @@ Ensure(buffer, create_empty_and_assign_data_and_amend)
 	assert_that(p_expected, is_equal_to(NULL));
 }
 
+Ensure(buffer, create_empty_and_assign_data_and_assign_smaller)
+{
+	struct zob_buffer * p_buffer = NULL;
+	zob_buffer_create(&p_buffer);
+	assert_that(p_buffer, is_not_equal_to(NULL));
+
+	char const * p_message = "My poney is blue";
+	zob_buffer_is_auto_set(p_buffer, true);
+	size_t size = -1;
+	zob_buffer_write(p_buffer, 0, strlen(p_message), p_message, &size);
+	assert_that(strlen(p_message), is_equal_to(size));
+
+	char const * p_unicorn = "Unicorn";
+	zob_buffer_write(p_buffer, 0, strlen(p_unicorn), p_unicorn, &size);
+	assert_that(strlen(p_unicorn), is_equal_to(size));
+
+	struct zob_buffer * p_expected = NULL;
+	zob_buffer_create(&p_expected);
+	char const * p_expected_message = p_unicorn;
+	zob_buffer_is_auto_set(p_expected, true);
+	zob_buffer_write(p_expected, 0, strlen(p_expected_message), p_expected_message, &size);
+	int diff = 42;
+	zob_buffer_compare(p_buffer, p_expected, &diff);
+	assert_that(diff, is_equal_to(0));
+
+	zob_buffer_dispose(&p_buffer);
+	assert_that(p_buffer, is_equal_to(NULL));
+	zob_buffer_dispose(&p_expected);
+	assert_that(p_expected, is_equal_to(NULL));
+}
+
 Ensure(buffer, create_and_assign_and_slice)
 {
 	struct zob_buffer * p_buffer = NULL;
@@ -366,6 +397,31 @@ Ensure(buffer, compare_buffers_with_slice_from_middle)
 	zob_buffer_dispose(&p_jacta);
 }
 
+Ensure(buffer, compare_shrinked)
+{
+	struct zob_buffer * p_lhs = NULL;
+	zob_buffer_create(&p_lhs);
+	zob_buffer_is_auto_set(p_lhs, true);
+	zob_buffer_write(p_lhs, 0, strlen("Flying"), "Flying", NULL);
+
+	struct zob_buffer * p_rhs = NULL;
+	zob_buffer_create(&p_rhs);
+	zob_buffer_is_auto_set(p_rhs, true);
+	zob_buffer_write(p_rhs, 0, strlen("Flyer"), "Flyer", NULL);
+
+	int diff = 42;
+	zob_buffer_compare(p_lhs, p_rhs, &diff);
+	assert_that(diff, is_not_equal_to(0));
+	assert_that(diff, is_not_equal_to(42));
+
+	zob_buffer_size_set(p_rhs, strlen("Fly"));
+	zob_buffer_size_set(p_lhs, strlen("Fly"));
+	diff = 42;
+	zob_buffer_compare(p_lhs, p_rhs, &diff);
+	assert_that(diff, is_equal_to(0));
+	assert_that(diff, is_not_equal_to(42));
+}
+
 #if 0
 int main()
 {
@@ -387,8 +443,9 @@ int main()
 	setup_reporting(create_text_reporter());
 
 /*	buffer__create_empty_ensure_size();*/
-/*	buffer__compare_buffers_with_slice_from_middle();*/
-	buffer__create_empty_and_assign_data_and_amend();
+/*	buffer__compare_cloned_buffers();*/
+	buffer__compare_shrinked();
+/*	buffer__create_empty_and_assign_data_and_amend();*/
 
 	return EXIT_SUCCESS;
 }

@@ -94,12 +94,12 @@ void zob_buffer_ensure(struct zob_buffer * p_buffer, size_t position, size_t inp
 	chunk_number += (input_size - available_size) % p_buffer->chunk_size ? 1 : 0;
 	int new_size = current_size + chunk_number * p_buffer->chunk_size;
 
-	struct zob_allocator * p_allocator = NULL;
-	zob_app_allocator_get(gp_app, &p_allocator);
 	// If p_begin point an automatic variable, we have to allocate a brand new memory
 	// chunk
 	if(p_buffer->is_auto)
 	{
+		struct zob_allocator * p_allocator = NULL;
+		zob_app_allocator_get(gp_app, &p_allocator);
 		char * p_auto = p_buffer->p_begin;
 		zob_allocator_do_allocate(p_allocator, (void **) &p_buffer->p_begin, new_size * sizeof *p_buffer->p_begin);
 		if(p_auto)
@@ -114,9 +114,7 @@ void zob_buffer_ensure(struct zob_buffer * p_buffer, size_t position, size_t inp
 
 	CHECK_NULL(p_buffer->p_begin);
 
-	if(p_buffer->p_end == NULL)
-		p_buffer->p_end = p_buffer->p_begin;
-
+	p_buffer->p_end = p_buffer->p_begin;
 	p_buffer->p_end += chunk_number * p_buffer->chunk_size;
 }
 
@@ -153,6 +151,12 @@ void zob_buffer_compare(struct zob_buffer * p_lhs, struct zob_buffer * p_rhs, in
 	if(p_lhs->size != p_rhs->size)
 	{
 		*p_diff = p_rhs->size - p_lhs->size;
+		return;
+	}
+
+	if(0 == p_lhs->size)
+	{
+		*p_diff = 0;
 		return;
 	}
 
