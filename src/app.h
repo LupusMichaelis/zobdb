@@ -30,6 +30,7 @@ extern struct zob_app * gp_app;
 void zob_app_singleton_set(struct zob_app * p_app);
 
 void zob_app_alloc(struct zob_app ** pp_app);
+void zob_app_dispose(struct zob_app ** pp_app);
 void zob_app_init(struct zob_app * p_app);
 void zob_app_setup(struct zob_app * p_app);
 void zob_app_command(struct zob_app * p_app, int argc, char ** argv);

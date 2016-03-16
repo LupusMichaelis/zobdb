@@ -101,12 +101,12 @@ int zob_server_run(struct zob_server * p_server)
 
 			struct zob_string * p_verb = NULL;
 			zob_string_create(&p_verb);
-			zob_string_write(p_verb, 0, "KO", NULL);
+			zob_string_set(p_verb, "KO");
 			zob_message_verb_set(p_answer, p_verb);
 
 			struct zob_string * p_message = NULL;
 			zob_string_create(&p_message);
-			zob_string_write(p_message, 0, "Parse error", NULL);
+			zob_string_set(p_message, "Parse error");
 			zob_message_payload_set(p_answer, p_message);
 
 			zob_server_answer(p_server, p_answer);
@@ -145,6 +145,7 @@ void zob_server_process(struct zob_server * p_server, struct zob_message * p_req
 	zob_string_create(&p_payload);
 	zob_message_verb_get(p_request, p_verb);
 	zob_message_key_get(p_request, p_key);
+	zob_string_create_from_cstring(&p_message, "Ko");
 
 	char * p_raw_key = NULL;
 	zob_string_get(p_key, &p_raw_key);
@@ -166,17 +167,17 @@ void zob_server_process(struct zob_server * p_server, struct zob_message * p_req
 			size_t raw_size = 0;
 			zob_string_size_get(p_payload, &raw_size);
 			snprintf(answer, MIN(sizeof answer / sizeof answer[0] - 1, raw_size + 1 + 3) , "Ok %s", p_raw_payload);
-			zob_string_create_from_cstring(&p_message, answer);
+			zob_string_set(p_message, answer);
 		}
 		else
-			zob_string_create_from_cstring(&p_message, "Ko\nNot Found");
+			zob_string_set(p_message, "Ko\nNot Found");
 
 		zob_app_log(gp_app, p_raw_key, __FILE__, __LINE__);
 
 		goto cleanup;
 	}
 
-	zob_string_write(p_verb_candidate, 0, VERB_UPDATE, NULL);
+	zob_string_set(p_verb_candidate, VERB_UPDATE);
 	zob_string_compare(p_verb, p_verb_candidate, &diff);
 	if(0 == diff)
 	{
@@ -188,14 +189,13 @@ void zob_server_process(struct zob_server * p_server, struct zob_message * p_req
 
 		zob_app_log(gp_app, p_raw_key, __FILE__, __LINE__);
 
-		zob_string_create_from_cstring(&p_message, "Ko");
 		if(is_ok)
-			zob_string_write(p_message, 0, "Ok", NULL);
+			zob_string_set(p_message, "Ok");
 
 		goto cleanup;
 	}
 
-	zob_string_write(p_verb_candidate, 0, VERB_NEW, NULL);
+	zob_string_set(p_verb_candidate, VERB_NEW);
 	zob_string_compare(p_verb, p_verb_candidate, &diff);
 	if(0 == diff)
 	{
@@ -207,14 +207,13 @@ void zob_server_process(struct zob_server * p_server, struct zob_message * p_req
 
 		zob_app_log(gp_app, p_raw_key, __FILE__, __LINE__);
 
-		zob_string_create_from_cstring(&p_message, "Ko");
 		if(is_ok)
-			zob_string_write(p_message, 0, "Ok", NULL);
+			zob_string_set(p_message, "Ok");
 
 		goto cleanup;
 	}
 
-	zob_string_write(p_verb_candidate, 0, VERB_DELETE, NULL);
+	zob_string_set(p_verb_candidate, VERB_DELETE);
 	zob_string_compare(p_verb, p_verb_candidate, &diff);
 	if(0 == diff)
 	{
@@ -225,17 +224,17 @@ void zob_server_process(struct zob_server * p_server, struct zob_message * p_req
 
 		zob_app_log(gp_app, p_raw_key, __FILE__, __LINE__);
 
-		zob_string_create_from_cstring(&p_message, "Ko");
 		if(is_ok)
-			zob_string_write(p_message, 0, "Ok", NULL);
+			zob_string_set(p_message, "Ok");
 
 		goto cleanup;
 	}
 
-	zob_string_write(p_verb_candidate, 0, VERB_STOP, NULL);
+	zob_string_set(p_verb_candidate, VERB_STOP);
 	zob_string_compare(p_verb, p_verb_candidate, &diff);
 	if(0 == diff)
 	{
+		zob_string_set(p_message, "Ok");
 		p_server->is_running = false;
 		goto cleanup;
 	}

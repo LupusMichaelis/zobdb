@@ -31,5 +31,6 @@ void zob_request_builder_parse_clone(struct zob_request_builder * p_rb);
 void zob_request_builder_parse_read(struct zob_request_builder * p_rb);
 void zob_request_builder_parse_delete(struct zob_request_builder * p_rb);
 void zob_request_builder_parse_update(struct zob_request_builder * p_rb);
+void zob_request_builder_parse_stop(struct zob_request_builder * p_rb);
 
 #endif // H_ZOB_REQUEST_BUILDER

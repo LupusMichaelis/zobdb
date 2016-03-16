@@ -39,7 +39,7 @@ static char * gpc_verbs[] = {
 	VERB_READ,
 	VERB_DELETE,
 	VERB_UPDATE,
-	"stop",
+	VERB_STOP,
 	(char *)NULL,
 };
 
@@ -116,7 +116,8 @@ void zob_request_builder_parse(
 	{
 		if(!p_rb->has_verb)
 			zob_request_builder_find_verb(p_rb);
-		else
+
+		if(p_rb->has_verb)
 		{
 			switch(p_rb->verb)
 			{
@@ -134,6 +135,9 @@ void zob_request_builder_parse(
 					break;
 				case 4 /* VERB_UPDATE */:
 					zob_request_builder_parse_update(p_rb);
+					break;
+				case 5 /* VERB_STOP */:
+					zob_request_builder_parse_stop(p_rb);
 					break;
 				default:
 					zob_app_error(gp_app, "Invalid verb identifier", __FILE__, __LINE__);
@@ -167,7 +171,11 @@ void zob_request_builder_find_verb(struct zob_request_builder * p_rb)
 	zob_string_find_char(p_rb->p_buffer, ' ', p_rb->first, p_rb->last, &cursor, &has_found);
 
 	if(!has_found)
-		return; // We don't have enough data to take a decision
+	{
+		zob_string_find_char(p_rb->p_buffer, '\n', p_rb->first, p_rb->last, &cursor, &has_found);
+		if(!has_found)
+			return; // We don't have enough data to take a decision
+	}
 
 	// We place the cursor after the space
 	p_rb->current = cursor + 1;
@@ -209,13 +217,16 @@ void zob_request_builder_parse_header(struct zob_request_builder * p_rb)
 	size_t line_feed = 0;
 
 	zob_string_find_char(p_rb->p_buffer, '\n', p_rb->first, p_rb->last, &line_feed, &has_found);
-	if(!has_found)
+	if(p_rb->verb != 5 && !has_found)
 		return; // We don't have enough data to take a decision
 
 	struct zob_string * p_verb = NULL;
 	zob_string_create(&p_verb);
 	zob_string_set(p_verb, gpc_verbs[p_rb->verb]);
 	zob_message_verb_set(p_rb->p_request, p_verb);
+
+	if(p_rb->verb == 5)
+		return;
 
 	size_t word_separator = 0;
 	struct zob_string * p_key = NULL;
@@ -300,4 +311,11 @@ void zob_request_builder_parse_delete(struct zob_request_builder * p_rb)
 void zob_request_builder_parse_update(struct zob_request_builder * p_rb)
 {
 	zob_request_builder_parse_new(p_rb);
+}
+
+void zob_request_builder_parse_stop(struct zob_request_builder * p_rb)
+{
+	zob_request_builder_parse_header(p_rb);
+	p_rb->is_bad_request = false;
+	p_rb->need_moar = false;
 }

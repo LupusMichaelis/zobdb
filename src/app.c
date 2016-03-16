@@ -6,6 +6,7 @@
 #include "string.h"
 #include "config.h"
 #include "log.h"
+#include "object.h"
 
 #include <unistd.h>
 #include <stdlib.h>
@@ -71,6 +72,8 @@ void zob_app_init(struct zob_app * p_app)
 	signal(SIGINT, zob_app_signal);
 	atexit(zob_app_on_exit);
 }
+
+APP_DISPOSE(app)
 
 void zob_app_command(struct zob_app * p_app, int argc, char ** argv)
 {
@@ -139,6 +142,8 @@ int zob_app_run(struct zob_app * p_app)
 		return zob_client_run(p_app->p_main_module);
 	else if(p_app->is_server)
 		return zob_server_run(p_app->p_main_module);
+
+	zob_app_dispose(&p_app);
 
 	return EXIT_FAILURE;
 }
