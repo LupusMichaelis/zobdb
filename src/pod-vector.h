@@ -65,9 +65,11 @@ void pod_name##_vector_create(pod_type *** ppp, size_t count)								\
 #	define APP_POD_VECTOR_DISPOSE(pod_name, pod_type)										\
 void pod_name##_vector_dispose(pod_type *** ppp)											\
 {																							\
-	do pod_name##_dispose(*ppp);															\
-	while(*++*ppp);																			\
+	pod_type ** pp = *ppp;																	\
+	do pod_name##_clean(*pp, true);															\
+	while(*++pp);																			\
 	free(**ppp);																			\
+	free(*ppp);																				\
 	*ppp = NULL;																			\
 }																							\
 

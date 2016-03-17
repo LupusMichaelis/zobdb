@@ -5,7 +5,6 @@
 #include "object-vector.h"
 
 #include <stdlib.h>
-#include <stdlib.h>
 
 struct zob_config
 {
