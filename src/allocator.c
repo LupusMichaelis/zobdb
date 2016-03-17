@@ -36,6 +36,13 @@ void zob_allocator_init(struct zob_allocator * p_allocator,
 	p_allocator->do_release = do_release_callback;
 }
 
+void zob_allocator_dispose(struct zob_allocator ** pp)
+{
+	zob_allocator_clean(*pp);
+	free(*pp);
+	*pp = NULL;
+}
+
 void zob_allocator_clean(struct zob_allocator * p_allocator)
 {
 }

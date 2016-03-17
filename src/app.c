@@ -136,6 +136,7 @@ void zob_app_clean(struct zob_app * p_app, bool has_to_dispose)
 
 		zob_config_vector_dispose(&p_app->pp_config);
 		zob_log_dispose(&p_app->p_log);
+		zob_allocator_dispose(&p_app->p_allocator);
 	}
 
 	memset(p_app, 0, sizeof *p_app);

@@ -14,6 +14,7 @@ typedef void (*zob_allocator_do_release_callback)	(struct zob_allocator * p_allo
 
 ////////////////////////////////////////////////////////////////////////////////
 void zob_allocator_alloc(struct zob_allocator ** pp);
+void zob_allocator_dispose(struct zob_allocator ** pp);
 void zob_allocator_init(struct zob_allocator * p_allocator,
 		zob_allocator_do_allocate_callback do_allocate_callback,
 		zob_allocator_do_reallocate_callback do_reallocate_callback,
