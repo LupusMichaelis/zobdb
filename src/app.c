@@ -73,7 +73,12 @@ void zob_app_init(struct zob_app * p_app)
 	atexit(zob_app_on_exit);
 }
 
-APP_DISPOSE(app)
+void zob_app_dispose(struct zob_app ** pp_app)
+{
+	zob_app_clean(*pp_app, true);
+	free(*pp_app);
+	*pp_app = NULL;
+}
 
 void zob_app_command(struct zob_app * p_app, int argc, char ** argv)
 {
@@ -138,14 +143,15 @@ void zob_app_clean(struct zob_app * p_app, bool has_to_dispose)
 
 int zob_app_run(struct zob_app * p_app)
 {
+	int exit_status = EXIT_FAILURE;
 	if(p_app->is_client)
-		return zob_client_run(p_app->p_main_module);
+		exit_status = zob_client_run(p_app->p_main_module);
 	else if(p_app->is_server)
-		return zob_server_run(p_app->p_main_module);
+		exit_status = zob_server_run(p_app->p_main_module);
 
 	zob_app_dispose(&p_app);
 
-	return EXIT_FAILURE;
+	return exit_status;
 }
 
 void zob_app_allocator_get(struct zob_app * p_app, struct zob_allocator ** pp_allocator)
