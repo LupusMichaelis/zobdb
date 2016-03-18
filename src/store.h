@@ -15,6 +15,7 @@ void zob_store_copy(struct zob_store * p_from, struct zob_store * p_to);
 void zob_store_clean(struct zob_store * p_store, bool has_to_dispose) ;
 void zob_store_dispose(struct zob_store ** pp_store);
 
+void zob_store_connect(struct zob_store * p_store);
 void zob_store_open(struct zob_store * p_store, const char * filename);
 void zob_store_read(
 		struct zob_store * p_store,

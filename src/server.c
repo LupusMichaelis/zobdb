@@ -51,6 +51,8 @@ void zob_server_init(struct zob_server * p_server)
 
 	memset(&p_server->self_addr, 0, sizeof p_server->self_addr);
 	p_server->self_addr.sun_family = AF_UNIX;
+
+	zob_store_create(&p_server->p_store);
 }
 
 void zob_server_clean(struct zob_server * p_server, bool has_to_dispose)
@@ -66,10 +68,11 @@ int zob_server_run(struct zob_server * p_server)
 {
 	//daemon(1, 0);
 
+	zob_store_connect(p_server->p_store);
+
 	char * p_sock_name = NULL;
 	zob_app_config_get(gp_app, "socket.name", &p_sock_name);
 
-	zob_store_create(&p_server->p_store);
 	zob_server_listen(p_server, p_sock_name);
 	do
 	{
@@ -100,14 +103,14 @@ int zob_server_run(struct zob_server * p_server)
 			zob_message_create(&p_answer);
 
 			struct zob_string * p_verb = NULL;
-			zob_string_create(&p_verb);
-			zob_string_set(p_verb, "KO");
+			zob_string_create_from_cstring(&p_verb, "KO");
 			zob_message_verb_set(p_answer, p_verb);
+			zob_string_dispose(&p_verb);
 
 			struct zob_string * p_message = NULL;
-			zob_string_create(&p_message);
-			zob_string_set(p_message, "Parse error");
+			zob_string_create_from_cstring(&p_message, "Parse error");
 			zob_message_payload_set(p_answer, p_message);
+			zob_string_dispose(&p_message);
 
 			zob_server_answer(p_server, p_answer);
 		}
@@ -115,7 +118,6 @@ int zob_server_run(struct zob_server * p_server)
 		{
 			struct zob_message * p_request = NULL;
 			zob_request_builder_get_request(p_rb, &p_request);
-
 			zob_message_clone(p_request, &p_answer);
 
 			zob_server_process(p_server, p_request, p_answer);
@@ -128,8 +130,6 @@ int zob_server_run(struct zob_server * p_server)
 		zob_server_session_end(p_server);
 	}
 	while(p_server->is_running);
-
-	zob_store_dispose(&p_server->p_store);
 
 	return EXIT_SUCCESS;
 }
@@ -241,6 +241,8 @@ void zob_server_process(struct zob_server * p_server, struct zob_message * p_req
 
 cleanup:
 	zob_message_payload_set(p_answer, p_message);
+	zob_string_dispose(&p_verb);
+	zob_string_dispose(&p_key);
 	zob_string_dispose(&p_payload);
 	zob_string_dispose(&p_message);
 	zob_string_dispose(&p_verb_candidate);

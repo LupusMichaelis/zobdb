@@ -24,6 +24,11 @@ APP_CLONE(store)
 
 void zob_store_init(struct zob_store * p_store)
 {
+	(void) *p_store;
+}
+
+void zob_store_connect(struct zob_store * p_store)
+{
 	const char * filename = NULL;
 	int ret = 0;
 

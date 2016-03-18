@@ -134,8 +134,8 @@ void zob_app_clean(struct zob_app * p_app, bool has_to_dispose)
 		else if(p_app->is_server)
 			zob_server_dispose((struct zob_server **)&p_app->p_main_module);
 
-		zob_config_vector_dispose(&p_app->pp_config);
 		zob_log_dispose(&p_app->p_log);
+		zob_config_vector_dispose(&p_app->pp_config);
 		zob_allocator_dispose(&p_app->p_allocator);
 	}
 
