@@ -19,7 +19,7 @@ tests:
 	$(MAKE) -f tests.mk
 
 $(TARGET): app
-	-ln -s ./app $@
+	-ln -sf ./app $@
 
 clean:
 	-$(RM) $(OBJS) app main.o $(TARGET) $(TARGET:=.o)
