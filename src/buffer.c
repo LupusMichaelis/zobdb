@@ -136,6 +136,12 @@ void zob_buffer_write(struct zob_buffer * p_buffer, size_t from, size_t length, 
 		*p_written = length;
 }
 
+void zob_buffer_write_at(struct zob_buffer * p_buffer, size_t at, char item)
+{
+	assert(at < p_buffer->size);
+	*(p_buffer->p_begin + at) = item;
+}
+
 void zob_buffer_slice_get(struct zob_buffer * p_buffer, size_t from, size_t to, struct zob_buffer ** pp_slice)
 {
 	zob_buffer_create(pp_slice);

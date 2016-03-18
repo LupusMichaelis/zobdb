@@ -66,24 +66,27 @@ void zob_string_compare(struct zob_string * p_lhs, struct zob_string * p_rhs, in
 
 void zob_string_size_set(struct zob_string * p_string, size_t input_size)
 {
-	zob_buffer_size_set(p_string->p_buffer, input_size);
+	zob_buffer_size_set(p_string->p_buffer, input_size + 1);
+	zob_buffer_write_at(p_string->p_buffer, input_size, '\0');
 }
 
 void zob_string_size_get(struct zob_string * p_string, size_t * p_input_size)
 {
 	zob_buffer_size_get(p_string->p_buffer, p_input_size);
+	--*p_input_size;
 }
 
 void zob_string_write(struct zob_string * p_string, size_t from, const char * p_text, size_t * p_written)
 {
-	zob_buffer_write(p_string->p_buffer, from, strlen(p_text), p_text, p_written);
+	size_t text_lenght = strlen(p_text);
+	zob_buffer_write(p_string->p_buffer, from, text_lenght, p_text, p_written);
+	zob_string_size_set(p_string, from + text_lenght);
 }
 
 void zob_string_set(struct zob_string * p_string, char * p_text)
 {
 	size_t length = strlen(p_text);
 	zob_string_write(p_string, 0, p_text, &length);
-	zob_buffer_size_set(p_string->p_buffer, length);
 }
 
 void zob_string_get(struct zob_string * p_string, char ** pp_text)
@@ -98,6 +101,7 @@ void zob_string_slice_get(struct zob_string * p_string, size_t first, size_t las
 
 	zob_string_create(pp_slice);
 	(*pp_slice)->p_buffer = p_slice;
+	zob_string_size_set(*pp_slice, last - first);
 }
 
 void zob_string_find_char(

@@ -26,6 +26,7 @@ void zob_buffer_dispose(struct zob_buffer ** pp_buffer);
 
 void zob_buffer_ensure(struct zob_buffer * p_buffer, size_t from, size_t input_size);
 void zob_buffer_write(struct zob_buffer * p_buffer, size_t from, size_t length, const char * p_text, size_t * p_written);
+void zob_buffer_write_at(struct zob_buffer * p_buffer, size_t at, char item);
 
 void zob_buffer_size_set(struct zob_buffer * p_buffer, size_t size);
 void zob_buffer_size_get(struct zob_buffer * p_buffer, size_t * p_size);
