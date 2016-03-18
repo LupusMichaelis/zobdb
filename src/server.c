@@ -150,7 +150,7 @@ void zob_server_process(struct zob_server * p_server, struct zob_message * p_req
 	int diff = 0;
 	struct zob_string * p_verb_candidate = NULL;
 
-	zob_string_create_from_cstring(&p_verb_candidate, VERB_READ);
+	zob_string_create_from_cstring(&p_verb_candidate, ZOB_VERB_READ);
 	zob_string_compare(p_verb, p_verb_candidate, &diff);
 	if(0 == diff)
 	{
@@ -174,7 +174,7 @@ void zob_server_process(struct zob_server * p_server, struct zob_message * p_req
 		goto cleanup;
 	}
 
-	zob_string_set(p_verb_candidate, VERB_UPDATE);
+	zob_string_set(p_verb_candidate, ZOB_VERB_UPDATE);
 	zob_string_compare(p_verb, p_verb_candidate, &diff);
 	if(0 == diff)
 	{
@@ -192,7 +192,7 @@ void zob_server_process(struct zob_server * p_server, struct zob_message * p_req
 		goto cleanup;
 	}
 
-	zob_string_set(p_verb_candidate, VERB_NEW);
+	zob_string_set(p_verb_candidate, ZOB_VERB_NEW);
 	zob_string_compare(p_verb, p_verb_candidate, &diff);
 	if(0 == diff)
 	{
@@ -210,7 +210,7 @@ void zob_server_process(struct zob_server * p_server, struct zob_message * p_req
 		goto cleanup;
 	}
 
-	zob_string_set(p_verb_candidate, VERB_DELETE);
+	zob_string_set(p_verb_candidate, ZOB_VERB_DELETE);
 	zob_string_compare(p_verb, p_verb_candidate, &diff);
 	if(0 == diff)
 	{
@@ -227,7 +227,7 @@ void zob_server_process(struct zob_server * p_server, struct zob_message * p_req
 		goto cleanup;
 	}
 
-	zob_string_set(p_verb_candidate, VERB_STOP);
+	zob_string_set(p_verb_candidate, ZOB_VERB_STOP);
 	zob_string_compare(p_verb, p_verb_candidate, &diff);
 	if(0 == diff)
 	{

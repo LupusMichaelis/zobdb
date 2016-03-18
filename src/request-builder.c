@@ -35,12 +35,12 @@ struct zob_string;
 
 // Internal code to avoid the builder to check all the verb string on every input
 static char * gpc_verbs[] = {
-	VERB_NEW,
-	VERB_CLONE,
-	VERB_READ,
-	VERB_DELETE,
-	VERB_UPDATE,
-	VERB_STOP,
+	ZOB_VERB_NEW,
+	ZOB_VERB_CLONE,
+	ZOB_VERB_READ,
+	ZOB_VERB_DELETE,
+	ZOB_VERB_UPDATE,
+	ZOB_VERB_STOP,
 	(char *)NULL,
 };
 
@@ -122,22 +122,22 @@ void zob_request_builder_parse(
 		{
 			switch(p_rb->verb)
 			{
-				case 0 /* VERB_NEW */:
+				case 0 /* ZOB_VERB_NEW */:
 					zob_request_builder_parse_new(p_rb);
 					break;
-				case 1 /* VERB_CLONE */:
+				case 1 /* ZOB_VERB_CLONE */:
 					zob_request_builder_parse_clone(p_rb);
 					break;
-				case 2 /* VERB_READ */:
+				case 2 /* ZOB_VERB_READ */:
 					zob_request_builder_parse_read(p_rb);
 					break;
-				case 3 /* VERB_DELETE */:
+				case 3 /* ZOB_VERB_DELETE */:
 					zob_request_builder_parse_delete(p_rb);
 					break;
-				case 4 /* VERB_UPDATE */:
+				case 4 /* ZOB_VERB_UPDATE */:
 					zob_request_builder_parse_update(p_rb);
 					break;
-				case 5 /* VERB_STOP */:
+				case 5 /* ZOB_VERB_STOP */:
 					zob_request_builder_parse_stop(p_rb);
 					break;
 				default:

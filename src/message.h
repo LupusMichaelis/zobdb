@@ -4,12 +4,12 @@
 struct zob_app;
 struct zob_server;
 
-#	define VERB_NEW				"new"
-#	define VERB_CLONE			"clone"
-#	define VERB_READ			"read"
-#	define VERB_DELETE			"delete"
-#	define VERB_UPDATE			"update"
-#	define VERB_STOP			"stop"
+#	define ZOB_VERB_NEW			"new"
+#	define ZOB_VERB_CLONE		"clone"
+#	define ZOB_VERB_READ		"read"
+#	define ZOB_VERB_DELETE		"delete"
+#	define ZOB_VERB_UPDATE		"update"
+#	define ZOB_VERB_STOP		"stop"
 
 #	define OPT_READ_DEEP		"deep"
 #	define OPT_READ_SHALLOW		"shallow"
