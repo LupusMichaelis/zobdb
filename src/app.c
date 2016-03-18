@@ -25,16 +25,6 @@ void zob_app_singleton_set(struct zob_app * p_app)
 	gp_app = p_app;
 }
 
-static void zob_app_signal(int s)
-{
-	exit(s);
-}
-
-static void zob_app_on_exit()
-{
-	//unlink(SOCK_NAME);
-}
-
 struct zob_app
 {
 	char * name;
@@ -69,8 +59,6 @@ static struct pair tbl_config[] =
 
 void zob_app_init(struct zob_app * p_app)
 {
-	signal(SIGINT, zob_app_signal);
-	atexit(zob_app_on_exit);
 }
 
 void zob_app_dispose(struct zob_app ** pp_app)

@@ -1,9 +1,15 @@
 #include "src/app.h"
 
 #include <stdlib.h>
+#ifdef DEBUG
+#	include <mcheck.h>
+#endif
 
 int main(int argc, char *argv[])
 {
+#ifdef DEBUG
+	mtrace();
+#endif
 	struct zob_app * p_app;
 	zob_app_alloc(&p_app);
 	zob_app_init(p_app);
