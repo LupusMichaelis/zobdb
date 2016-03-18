@@ -125,7 +125,7 @@ void zob_buffer_write(struct zob_buffer * p_buffer, size_t from, size_t length, 
 
 	if(!length) zob_app_error(gp_app, "Empty write", __FILE__, __LINE__);
 
-	if(p_buffer->is_auto);
+	if(p_buffer->is_auto)
 		zob_buffer_ensure(p_buffer, from, length);
 	size_t buffer_size = 0;
 	zob_buffer_size_get(p_buffer, &buffer_size);
@@ -265,19 +265,14 @@ void zob_buffer_find_string(
 			char const * p_needle_end = p_needle;
 
 			p_cursor_end = p_cursor;
-			while(*++p_needle_end);
+			while(*++p_needle_end)
 			{
-				++*p_cursor_end;
-				if(*p_cursor_end == *p_needle_end)
-					continue;
-
-				if(!*p_needle_end)
-					*p_has_found = true;
-				else
-					*p_has_found = false;
-
-				break;
+				++p_cursor_end;
+				if(*p_cursor_end != *p_needle_end)
+					break;
 			}
+
+			*p_has_found = '\0' == *p_needle_end ? true : false;
 
 			if(true == *p_has_found)
 				break;

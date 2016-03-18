@@ -19,7 +19,7 @@ struct zob_error
 static bool _zob_error_make_format(char ** pp_full_fmt, char const * p_file, int const line, char const * p_fmt)
 {
 	size_t fmt_size = FMT_SIZE;
-	size_t written = 0;
+	int written = 0;
 
 	// Build the base format string
 	do

@@ -317,7 +317,7 @@ void zob_server_answer(struct zob_server * p_server, struct zob_message * p_answ
 	zob_string_size_get(p_payload, &message_size);
 	char buffer[1024];
 	memset(buffer, 0, 1024);
-	int write_count = snprintf(buffer, MIN(message_size + 1, sizeof buffer / sizeof buffer[0] - 1), p_message);
+	int write_count = snprintf(buffer, MIN(message_size + 1, sizeof buffer / sizeof buffer[0] - 1), "%s", p_message);
 	CHECK_INT(write_count);
 
 	int written = write(p_server->session_fd, buffer, MIN(write_count, 1024 - 1));
