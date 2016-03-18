@@ -1,8 +1,9 @@
+#include "app.h"
+#include "log.h"
 #include "message.h"
+#include "object.h"
 #include "request-builder.h"
 #include "string.h"
-#include "app.h"
-#include "object.h"
 
 #include <stdlib.h>
 #include <assert.h>
@@ -276,7 +277,10 @@ void zob_request_builder_parse_new(struct zob_request_builder * p_rb)
 
 void zob_request_builder_parse_clone(struct zob_request_builder * p_rb)
 {
-	zob_app_log(gp_app, "Parse clone", __FILE__, __LINE__);
+	struct zob_string * p_message = NULL;
+	zob_string_create_from_cstring(&p_message, "Parse clone");
+	zob_app_log(gp_app, __FILE__, __LINE__, ZOB_LOG_LEVEL_INFO, p_message);
+	zob_string_dispose(&p_message);
 	p_rb->is_bad_request = true;
 }
 

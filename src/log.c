@@ -1,6 +1,7 @@
 
 #include "log.h"
 #include "object.h"
+#include "string.h"
 
 #include <stdio.h>
 #include <unistd.h>
@@ -54,11 +55,18 @@ void zob_log_open(struct zob_log * p_log, char * filename)
 	CHECK_NULL(p_log->p_log);
 }
 
-void zob_log_write(struct zob_log * p_log, char * text, char * filename, int filenumber)
+void zob_log_write
+	( struct zob_log * p_log
+	, char * filename
+	, int filenumber
+	, enum zob_log_level log_level
+	, struct zob_string * p_text)
 {
+	char * p_raw_text = NULL;
+	zob_string_get(p_text, &p_raw_text);
 	const char * p_name = NULL;
 	zob_app_name_get_reference(gp_app, &p_name);
-	fprintf(p_log->p_log, "%s: %s[%d] %s\n", p_name, filename, filenumber, text);
+	fprintf(p_log->p_log, "%s: %s:%d %s\n", p_name, filename, filenumber, p_raw_text);
 	fflush(p_log->p_log);
 }
 

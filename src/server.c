@@ -147,9 +147,6 @@ void zob_server_process(struct zob_server * p_server, struct zob_message * p_req
 	zob_message_key_get(p_request, p_key);
 	zob_string_create_from_cstring(&p_message, "Ko");
 
-	char * p_raw_key = NULL;
-	zob_string_get(p_key, &p_raw_key);
-
 	int diff = 0;
 	struct zob_string * p_verb_candidate = NULL;
 
@@ -172,7 +169,7 @@ void zob_server_process(struct zob_server * p_server, struct zob_message * p_req
 		else
 			zob_string_set(p_message, "Ko\nNot Found");
 
-		zob_app_log(gp_app, p_raw_key, __FILE__, __LINE__);
+		zob_app_log(gp_app, __FILE__, __LINE__, ZOB_LOG_LEVEL_INFO, p_key);
 
 		goto cleanup;
 	}
@@ -187,7 +184,7 @@ void zob_server_process(struct zob_server * p_server, struct zob_message * p_req
 		zob_message_payload_get(p_request, p_payload);
 		zob_store_write(p_server->p_store, p_key, p_payload, is_overwrite, &is_ok);
 
-		zob_app_log(gp_app, p_raw_key, __FILE__, __LINE__);
+		zob_app_log(gp_app, __FILE__, __LINE__, ZOB_LOG_LEVEL_INFO, p_key);
 
 		if(is_ok)
 			zob_string_set(p_message, "Ok");
@@ -205,7 +202,7 @@ void zob_server_process(struct zob_server * p_server, struct zob_message * p_req
 		zob_message_payload_get(p_request, p_payload);
 		zob_store_write(p_server->p_store, p_key, p_payload, is_overwrite, &is_ok);
 
-		zob_app_log(gp_app, p_raw_key, __FILE__, __LINE__);
+		zob_app_log(gp_app, __FILE__, __LINE__, ZOB_LOG_LEVEL_INFO, p_key);
 
 		if(is_ok)
 			zob_string_set(p_message, "Ok");
@@ -222,7 +219,7 @@ void zob_server_process(struct zob_server * p_server, struct zob_message * p_req
 		zob_message_payload_get(p_request, p_payload);
 		zob_store_delete(p_server->p_store, p_key, &is_ok);
 
-		zob_app_log(gp_app, p_raw_key, __FILE__, __LINE__);
+		zob_app_log(gp_app, __FILE__, __LINE__, ZOB_LOG_LEVEL_INFO, p_key);
 
 		if(is_ok)
 			zob_string_set(p_message, "Ok");

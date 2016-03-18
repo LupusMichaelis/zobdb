@@ -24,6 +24,9 @@
 
 struct zob_app;
 struct zob_allocator;
+struct zob_string;
+
+enum zob_log_level;
 
 extern struct zob_app * gp_app;
 
@@ -46,7 +49,9 @@ void zob_app_name_get_reference(struct zob_app * p_app, const char ** pp_name);
 void zob_app_open_log(struct zob_app * p_app, char * filename);
 
 void zob_app_error(struct zob_app * p_app, char * p_error, char * filename, int filenumber);
-void zob_app_log(struct zob_app * p_app, char * text, char * filename, int filenumber);
+void zob_app_log(struct zob_app * p_app
+	, char * filename, int filenumber
+	, enum zob_log_level log_level, struct zob_string * p_text);
 
 #endif // H_ZOB_APP
 

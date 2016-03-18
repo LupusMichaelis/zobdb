@@ -177,8 +177,8 @@ void zob_app_error(struct zob_app * p_app, char * p_error, char * filename, int 
 	zob_log_error(p_app->p_log, p_error, filename, filenumber);
 }
 
-void zob_app_log(struct zob_app * p_app, char * text, char * filename, int filenumber)
+void zob_app_log(struct zob_app * p_app, char * filename, int filenumber, enum zob_log_level log_level, struct zob_string * p_text)
 {
-	zob_log_write(p_app->p_log, text, filename, filenumber);
+	zob_log_write(p_app->p_log, filename, filenumber, log_level, p_text);
 }
 
