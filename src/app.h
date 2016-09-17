@@ -43,8 +43,13 @@ int zob_app_run(struct zob_app * p_app);
 
 void zob_app_allocator_get(struct zob_app * p_app, struct zob_allocator ** pp_allocator);
 
-void zob_app_config_get(struct zob_app * p_app, char * p_name, char ** pp_value);
-void zob_app_name_get_reference(struct zob_app * p_app, const char ** pp_name);
+void zob_app_name_get_reference(struct zob_app * p_app, struct zob_string ** pp_name);
+void zob_app_config_get(struct zob_app * p_app
+	, struct zob_string * p_name
+	, bool * p_found, struct zob_string ** pp_value);
+void zob_app_config_get_helper(struct zob_app * p_app
+	, char * p_name
+	, struct zob_string ** pp_value);
 
 void zob_app_open_log(struct zob_app * p_app, char * filename);
 

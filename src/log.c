@@ -22,18 +22,18 @@ APP_DISPOSE(log)
 
 void zob_log_init(struct zob_log * p_log)
 {
-	char * p_filename = NULL;
-	zob_app_config_get(gp_app, "log.file", &p_filename);
-	CHECK_NULL(p_filename);
+	struct zob_string * p_filename = NULL;
+	zob_app_config_get_helper(gp_app, "server.log.file", &p_filename);
 	zob_log_open(p_log, p_filename);
+	zob_string_dispose(&p_filename);
 }
 
 void zob_log_clean(struct zob_log * p_log, bool has_to_dispose)
 {
-	if(p_log->p_log)
+	if(has_to_dispose && p_log->p_log)
 		fclose(p_log->p_log);
 
-	if(p_log->log_fd)
+	if(has_to_dispose && p_log->log_fd)
 		close(p_log->log_fd);
 
 	memset(p_log, 0, sizeof *p_log);
@@ -47,8 +47,11 @@ void zob_log_copy(struct zob_log * p_from, struct zob_log * p_to)
 	CHECK_NULL(p_to->p_log);
 }
 
-void zob_log_open(struct zob_log * p_log, char * filename)
+void zob_log_open(struct zob_log * p_log, struct zob_string * p_filename)
 {
+	char * filename = NULL;
+	zob_string_get(p_filename, &filename);
+
 	p_log->log_fd = open(filename, O_CREAT | O_APPEND | O_WRONLY, 0600);
 	CHECK_INT(p_log->log_fd);
 	p_log->p_log = fdopen(p_log->log_fd, "a");
@@ -64,9 +67,11 @@ void zob_log_write
 {
 	char * p_raw_text = NULL;
 	zob_string_get(p_text, &p_raw_text);
-	const char * p_name = NULL;
+	struct zob_string * p_name = NULL;
 	zob_app_name_get_reference(gp_app, &p_name);
-	fprintf(p_log->p_log, "%s: %s:%d %s\n", p_name, filename, filenumber, p_raw_text);
+	char * p_raw_name = NULL;
+	zob_string_get(p_name, &p_raw_name);
+	fprintf(p_log->p_log, "%s: %s:%d %s\n", p_raw_name, filename, filenumber, p_raw_text);
 	fflush(p_log->p_log);
 }
 
@@ -80,9 +85,11 @@ void zob_log_error(struct zob_log * p_log, char * p_error, char * filename, int 
 	if(NULL == log)
 		log = stderr;
 
-	const char * p_name = NULL;
+	struct zob_string * p_name = NULL;
 	zob_app_name_get_reference(gp_app, &p_name);
-	fprintf(log, "%s: %s[%d] %s\n", p_name, filename, filenumber, p_error);
+	char * p_raw_name = NULL;
+	zob_string_get(p_name, &p_raw_name);
+	fprintf(log, "%s: %s[%d] %s\n", p_raw_name, filename, filenumber, p_error);
 
 	exit(EXIT_FAILURE);
 }

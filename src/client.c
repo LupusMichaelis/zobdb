@@ -8,6 +8,7 @@
 #include "client.h"
 #include "app.h"
 #include "object.h"
+#include "string.h"
 
 struct zob_client
 {
@@ -41,8 +42,8 @@ void zob_client_clean(struct zob_client * p_client, bool has_to_dispose)
 
 int zob_client_run(struct zob_client * p_client)
 {
-	char * p_sock_name = NULL;
-	zob_app_config_get(gp_app, "socket.name", &p_sock_name);
+	struct zob_string * p_sock_name = NULL;
+	zob_app_config_get_helper(gp_app, "socket.name", &p_sock_name);
 
 	zob_client_connect(p_client, p_sock_name);
 	zob_client_send(p_client, fileno(stdin));
@@ -51,9 +52,12 @@ int zob_client_run(struct zob_client * p_client)
 	return EXIT_SUCCESS;
 }
 
-void zob_client_connect(struct zob_client * p_client, char const * sockname)
+void zob_client_connect(struct zob_client * p_client, struct zob_string * p_sock_name)
 {
-	strcpy(p_client->remote_addr.sun_path, sockname);
+	char * p_raw_sock_name  = NULL;
+	zob_string_get(p_sock_name, &p_raw_sock_name);
+
+	strcpy(p_client->remote_addr.sun_path, p_raw_sock_name);
 
 	p_client->socket_fd = socket(AF_UNIX, SOCK_STREAM, 0);
 	CHECK_INT(p_client->socket_fd);

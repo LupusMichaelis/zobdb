@@ -12,7 +12,7 @@ void zob_server_dispose(struct zob_server ** pp_server);
 void zob_server_clean(struct zob_server * p_server, bool has_to_dispose);
 
 int zob_server_run(struct zob_server * p_server);
-void zob_server_listen(struct zob_server * p_server, const char * socket_path);
+void zob_server_listen(struct zob_server * p_server, struct zob_string * socket_path);
 void zob_server_session_begin(struct zob_server * p_server);
 void zob_server_session_end(struct zob_server * p_server);
 void zob_server_read(struct zob_server * p_server, char **pp_payload);

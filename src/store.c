@@ -27,12 +27,12 @@ void zob_store_init(struct zob_store * p_store)
 	(void) *p_store;
 }
 
-void zob_store_connect(struct zob_store * p_store)
+void zob_store_connect(struct zob_store * p_store, struct zob_string * p_file_name)
 {
-	const char * filename = NULL;
+	char * filename = NULL;
 	int ret = 0;
 
-	zob_app_config_get(gp_app, "store", (char **)&filename);
+	zob_string_get(p_file_name, &filename);
 	ret = db_create(&p_store->p_dbh, NULL, 0);
 	CHECK_BDB_INT(ret);
 
@@ -65,10 +65,10 @@ void zob_store_write(
 	memset(&key, 0, sizeof key);
 	memset(&data, 0, sizeof data);
 
-	zob_string_size_get(p_key, &key.size);
+	zob_string_size_get(p_key, (size_t *) &key.size);
 	zob_string_get(p_key, (char**) &key.data);
 
-	zob_string_size_get(p_value, &data.size);
+	zob_string_size_get(p_value, (size_t *) &data.size);
 	zob_string_get(p_value, (char **)&data.data);
 
 	int ret = p_store->p_dbh->put(p_store->p_dbh, NULL, &key, &data,
@@ -95,7 +95,7 @@ void zob_store_read(
 	memset(&data, 0, sizeof data);
 	memset(buffer, 0, sizeof buffer / sizeof buffer[0]);
 
-	zob_string_size_get(p_key, &key.size);
+	zob_string_size_get(p_key, (size_t *) &key.size);
 	zob_string_get(p_key, (char **)&key.data);
 
 	data.ulen = sizeof buffer;
@@ -121,7 +121,7 @@ void zob_store_delete(
 	DBT key;
 	memset(&key, 0, sizeof key);
 
-	zob_string_size_get(p_key, &key.size);
+	zob_string_size_get(p_key, (size_t *) &key.size);
 	zob_string_get(p_key, (char **)&key.data);
 
 	int ret = p_store->p_dbh->del(p_store->p_dbh, NULL, &key, 0);

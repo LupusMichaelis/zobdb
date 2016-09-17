@@ -3,6 +3,7 @@
 
 struct zob_client;
 struct zob_app;
+struct zob_string;
 
 #	include <stdbool.h>
 
@@ -14,7 +15,7 @@ void zob_client_clean(struct zob_client * p_client, bool has_to_dispose);
 
 int zob_client_run(struct zob_client * p_client);
 
-void zob_client_connect(struct zob_client * p_client, char const * sockname);
+void zob_client_connect(struct zob_client * p_client, struct zob_string * p_sock_name);
 void zob_client_send(struct zob_client * p_client, int fd);
 void zob_client_recv(struct zob_client * p_client);
 

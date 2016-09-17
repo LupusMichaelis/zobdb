@@ -68,10 +68,12 @@ int zob_server_run(struct zob_server * p_server)
 {
 	//daemon(1, 0);
 
-	zob_store_connect(p_server->p_store);
+	struct zob_string * p_file_name = NULL;
+	zob_app_config_get_helper(gp_app, "server.store", &p_file_name);
+	zob_store_connect(p_server->p_store, p_file_name);
 
-	char * p_sock_name = NULL;
-	zob_app_config_get(gp_app, "socket.name", &p_sock_name);
+	struct zob_string * p_sock_name = NULL;
+	zob_app_config_get_helper(gp_app, "socket.name", &p_sock_name);
 
 	zob_server_listen(p_server, p_sock_name);
 	do
@@ -245,11 +247,13 @@ cleanup:
 	zob_string_dispose(&p_verb_candidate);
 }
 
-void zob_server_listen(struct zob_server * p_server, const char * socket_path)
+void zob_server_listen(struct zob_server * p_server, struct zob_string * p_socket_path)
 {
 	p_server->socket_fd = socket(AF_UNIX, SOCK_STREAM, 0);
 	CHECK_INT(p_server->socket_fd);
 
+	char * socket_path = NULL;
+	zob_string_get(p_socket_path, &socket_path);
 	strcpy(p_server->self_addr.sun_path, socket_path);
 
 	CHECK_INT(bind(p_server->socket_fd

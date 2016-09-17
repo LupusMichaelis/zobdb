@@ -27,7 +27,7 @@ void zob_app_singleton_set(struct zob_app * p_app)
 
 struct zob_app
 {
-	char * name;
+	struct zob_string * p_name;
 
 	bool is_server: 1;
 	bool is_client: 1;
@@ -50,15 +50,26 @@ void zob_app_alloc(struct zob_app ** pp_app)
 	*pp_app = p_app;
 }
 
-static struct pair tbl_config[] =
+struct raw_pair
+{
+	char * p_name;
+	char * p_value;
+	//struct zob_string * p_value;
+};
+
+static struct raw_pair tbl_config[] =
 	{
-		{ "store", "./datas", },
-		{ "log.file", "./log", },
-		{ "socket.name", "./con", },
+		{ "socket.name",		"./con", },
+
+		{ "server.store",		"./datas", },
+		{ "server.log.file",	"./log", },
 	};
 
 void zob_app_init(struct zob_app * p_app)
 {
+	// Default allocator
+	zob_allocator_alloc(&p_app->p_allocator);
+	zob_allocator_init_std(p_app->p_allocator);
 }
 
 void zob_app_dispose(struct zob_app ** pp_app)
@@ -71,8 +82,8 @@ void zob_app_dispose(struct zob_app ** pp_app)
 void zob_app_command(struct zob_app * p_app, int argc, char ** argv)
 {
 	// Determine app is server or client from name /////////////////////////
-	p_app->name = *argv;
-	char * slash = p_app->name + strlen(p_app->name);
+	char * name = *argv;
+	char * slash = name + strlen(name);
 	do if('/' == *slash)
 	{
 		++slash;
@@ -80,7 +91,9 @@ void zob_app_command(struct zob_app * p_app, int argc, char ** argv)
 	}
 	else
 		--slash;
-	while(p_app->name != slash);
+	while(name != slash);
+
+	zob_string_create_from_cstring(&p_app->p_name, name);
 
 	p_app->is_client = 0 == strcmp(slash, "zob");
 	p_app->is_server = 0 == strcmp(slash, "zobd");
@@ -88,17 +101,22 @@ void zob_app_command(struct zob_app * p_app, int argc, char ** argv)
 
 void zob_app_setup(struct zob_app * p_app)
 {
-	// Default allocator
-	zob_allocator_alloc(&p_app->p_allocator);
-	zob_allocator_init_std(p_app->p_allocator);
-
 	// Configure app ///////////////////////////////////////////////////////
 	int element_count = sizeof tbl_config / sizeof *tbl_config;
 	struct zob_config ** pp_config = NULL;
 
 	zob_config_vector_create(&pp_config, element_count);
 	while(element_count--)
-		zob_config_vector_set(pp_config, element_count, &tbl_config[element_count]);
+	{
+		struct zob_string * p_key = NULL;
+		zob_string_create_from_cstring(&p_key, tbl_config[element_count].p_name);
+
+		struct zob_string * p_value = NULL;
+		zob_string_create_from_cstring(&p_value, tbl_config[element_count].p_value);
+
+		struct pair key_value = {p_key, p_value};
+		zob_config_vector_set(pp_config, element_count, &key_value);
+	}
 
 	p_app->pp_config = pp_config;
 
@@ -121,6 +139,8 @@ void zob_app_clean(struct zob_app * p_app, bool has_to_dispose)
 			zob_client_dispose((struct zob_client **)&p_app->p_main_module);
 		else if(p_app->is_server)
 			zob_server_dispose((struct zob_server **)&p_app->p_main_module);
+
+		zob_string_dispose(&p_app->p_name);
 
 		zob_log_dispose(&p_app->p_log);
 		zob_config_vector_dispose(&p_app->pp_config);
@@ -148,16 +168,26 @@ void zob_app_allocator_get(struct zob_app * p_app, struct zob_allocator ** pp_al
 	*pp_allocator = p_app->p_allocator;
 }
 
-void zob_app_config_get(struct zob_app * p_app, char * p_name, char ** pp_value)
+void zob_app_name_get_reference(struct zob_app * p_app, struct zob_string ** pp_name)
 {
-	char * p_value;
-	zob_config_vector_get_by_name(p_app->pp_config, p_name, (void *) &p_value);
-	*pp_value = p_value;
+	*pp_name = p_app->p_name;
 }
 
-void zob_app_name_get_reference(struct zob_app * p_app, const char ** pp_name)
+void zob_app_config_get(struct zob_app * p_app
+	, struct zob_string * p_name
+	, bool * p_found, struct zob_string ** pp_value)
 {
-	*pp_name = p_app->name;
+	zob_config_vector_get_by_name(p_app->pp_config, p_name, p_found, pp_value);
+}
+
+void zob_app_config_get_helper(struct zob_app * p_app
+	, char * p_name
+	, struct zob_string ** pp_value)
+{
+	struct zob_string * p_key_name = NULL;
+	zob_string_create_from_cstring(&p_key_name, p_name);
+	zob_app_config_get(p_app, p_key_name, NULL, pp_value);
+	zob_string_dispose(&p_key_name);
 }
 
 void zob_app_error(struct zob_app * p_app, char * p_error, char * filename, int filenumber)
