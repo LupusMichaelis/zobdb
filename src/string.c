@@ -37,6 +37,7 @@ void zob_string_init(struct zob_string * p_string)
 {
 	zob_buffer_create(&p_string->p_buffer);
 	zob_buffer_is_auto_set(p_string->p_buffer, true);
+	zob_buffer_write(p_string->p_buffer, 0, 1, "", NULL);
 }
 
 void zob_string_create_from_cstring(struct zob_string ** pp_string, char * p_raw)
