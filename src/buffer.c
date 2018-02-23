@@ -70,6 +70,15 @@ void zob_buffer_is_auto_set(struct zob_buffer * p_buffer, bool is_auto)
 	p_buffer->is_auto = is_auto;
 }
 
+void zob_buffer_create_from_memory(struct zob_buffer ** pp_buffer, void * p_content, size_t size)
+{
+	zob_buffer_create(pp_buffer);
+	zob_buffer_is_auto_set(*pp_buffer, 1);
+	zob_buffer_ensure(*pp_buffer, 0, size);
+	zob_buffer_is_auto_set(*pp_buffer, 0);
+	zob_buffer_write(*pp_buffer, 0, size, p_content, NULL);
+}
+
 // Ensure we have enough room to write input_size elements from the from position and
 // apply a linear grow algorithm, and fail if we can't grow.
 void zob_buffer_ensure(struct zob_buffer * p_buffer, size_t position, size_t input_size)

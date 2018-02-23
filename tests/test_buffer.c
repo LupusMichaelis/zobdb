@@ -78,18 +78,41 @@ Ensure(buffer, create_empty_and_assign_data)
 	assert_that(p_buffer, is_equal_to(NULL));
 }
 
-/*
-Ensure(buffer, create_with_data)
+Ensure(buffer, create_from_memory)
 {
 	struct zob_buffer * p_buffer = NULL;
 	char * p_message = "Direct content";
-	zob_string_create_from_cstring(&p_buffer, p_message);
+	size_t size = strlen(p_message);
+	zob_buffer_create_from_memory(&p_buffer, p_message, size);
 
-	size_t size = -1;
-	zob_string_size_get(p_buffer, &size);
+	size = -1;
+	zob_buffer_size_get(p_buffer, &size);
 	assert_that(strlen(p_message), is_equal_to(size));
 }
-*/
+
+Ensure(buffer, create_from_memory_zero_noerror)
+{
+	struct zob_buffer * p_buffer = NULL;
+	char * p_message = "";
+	size_t size = strlen(p_message);
+	zob_buffer_create_from_memory(&p_buffer, p_message, size);
+
+	size = -1;
+	zob_buffer_size_get(p_buffer, &size);
+	assert_that(strlen(p_message), is_equal_to(size));
+}
+
+Ensure(buffer, create_from_memory_ignore_zero_delim)
+{
+	struct zob_buffer * p_buffer = NULL;
+	char p_message[] = {'a', 'b', 0, 'c'};
+	size_t size = sizeof p_message;
+	zob_buffer_create_from_memory(&p_buffer, p_message, size);
+
+	size = -1;
+	zob_buffer_size_get(p_buffer, &size);
+	assert_that(sizeof p_message, is_equal_to(size));
+}
 
 Ensure(buffer, create_empty_and_assign_data_then_reset)
 {

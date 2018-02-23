@@ -11,6 +11,7 @@ struct zob_app;
 #	include <stdbool.h>
 
 void zob_buffer_create(struct zob_buffer ** pp_buffer);
+void zob_buffer_create_from_memory(struct zob_buffer ** pp_buffer, void * p_content, size_t size);
 void zob_buffer_init(struct zob_buffer * p_buffer);
 
 void zob_buffer_is_auto_set(struct zob_buffer * p_buffer, bool is_auto);
