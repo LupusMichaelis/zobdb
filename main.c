@@ -17,5 +17,11 @@ int main(int argc, char *argv[])
 
 	zob_app_command(gp_app, argc, argv);
 	zob_app_setup(gp_app);
-	return zob_app_run(gp_app);
+
+	int status = zob_app_run(gp_app);
+#ifdef DEBUG
+	muntrace();
+#endif
+
+	return status;
 }
