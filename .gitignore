@@ -9,6 +9,8 @@ log
 
 tests/error
 tests/*.so
+tests/test_buffer
+tests/test_string
 
 zob
 zobd
