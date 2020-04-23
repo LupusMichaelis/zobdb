@@ -8,6 +8,7 @@ datas
 log
 
 tests/error
+tests/*.so
 
-db
-dbd
+zob
+zobd

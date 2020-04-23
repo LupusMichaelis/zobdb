@@ -13,7 +13,7 @@ TARGET= \
 all: $(TESTS) $(TARGET)
 
 app: main.o $(OBJS)
-	$(CC) -o $@ $^ $(CGLAGS) $(LDFLAGS)
+	$(CC) -o $@ $^ $(CFLAGS) $(LDFLAGS)
 
 tests:
 	$(MAKE) -f tests.mk

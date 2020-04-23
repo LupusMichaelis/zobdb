@@ -1,6 +1,12 @@
+#CC=clang
+
 CFLAGS=-Wall \
 		-Werror \
 		-g -ggdb \
+		-DTRACE_MALLOC_CALLS \
+		-DDEBUG_HEAP \
+		-DDEBUG \
+		-fPIC \
 
 LDFLAGS= \
 		-ldb \
