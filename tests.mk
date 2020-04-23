@@ -10,6 +10,7 @@ CFLAGS += \
 
 TESTS= \
 	   $(TESTDIR)/test_buffer \
+	   $(TESTDIR)/test_string \
 
 UNITTESTER=cgreen-runner --colours
 
@@ -25,8 +26,17 @@ tests/%.o: tests/%.c
 
 # Buffer test ###########################################################
 $(TESTDIR)/test_buffer.so: $(TESTDIR)/test_buffer.o \
-	src/buffer.o
+	src/buffer.o \
+
 $(TESTDIR)/test_buffer: $(TESTDIR)/test_buffer.so
+	$(UNITTESTER) $^
+
+# String test ###########################################################
+$(TESTDIR)/test_string.so: $(TESTDIR)/test_string.o \
+	src/string.o \
+	src/buffer.o \
+
+$(TESTDIR)/test_string: $(TESTDIR)/test_string.so
 	$(UNITTESTER) $^
 
 ########################################################################
